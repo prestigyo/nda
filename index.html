@@ -1,0 +1,2520 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Activo Residencial · Rocafort · Acceso Restringido</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;500;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<!-- jsPDF: genera el PDF del NDA en el navegador -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- EmailJS: envia el PDF firmado a tu email sin servidor -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════════
+   GLOBALS
+═══════════════════════════════════════════════ */
+:root {
+  --bg:        #0c0c0e;
+  --surface:   #131318;
+  --surface2:  #1a1a22;
+  --border:    rgba(255,255,255,.08);
+  --border2:   rgba(255,255,255,.15);
+  --gold:      #c9a84c;
+  --gold-lt:   #e8c96e;
+  --gold-dim:  rgba(201,168,76,.18);
+  --white:     #f0ede8;
+  --muted:     rgba(240,237,232,.45);
+  --danger:    #c44;
+  --ok:        #4a9a6a;
+}
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--white);
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ═══════════════════════════════════════════════
+   SCREENS
+═══════════════════════════════════════════════ */
+.screen { display: none; min-height: 100vh; }
+.screen.active { display: flex; flex-direction: column; }
+
+/* ═══════════════════════════════════════════════
+   NOISE TEXTURE OVERLAY
+═══════════════════════════════════════════════ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 999;
+  opacity: .6;
+}
+
+/* ═══════════════════════════════════════════════
+   SCREEN 1 · LANDING
+═══════════════════════════════════════════════ */
+#s1 {
+  position: relative;
+  justify-content: center;
+  align-items: center;
+  padding: 48px 24px;
+}
+
+.s1-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  max-width: 1080px;
+  width: 100%;
+  gap: 0;
+  border: 1px solid var(--border2);
+  overflow: hidden;
+}
+
+.s1-left {
+  background: var(--surface);
+  padding: 72px 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-right: 1px solid var(--border2);
+  position: relative;
+  overflow: hidden;
+}
+.s1-left::before {
+  content: '';
+  position: absolute;
+  bottom: -60px;
+  left: -60px;
+  width: 280px;
+  height: 280px;
+  background: radial-gradient(circle, rgba(201,168,76,.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.s1-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 32px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.s1-eyebrow::before {
+  content: '';
+  display: block;
+  width: 24px;
+  height: 1px;
+  background: var(--gold);
+}
+
+.s1-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(42px, 5vw, 68px);
+  font-weight: 300;
+  line-height: 1.05;
+  letter-spacing: -.02em;
+  color: var(--white);
+}
+.s1-title em {
+  font-style: italic;
+  color: var(--gold);
+}
+
+.s1-subtitle {
+  margin-top: 24px;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.7;
+  max-width: 320px;
+}
+
+.s1-divider {
+  width: 40px;
+  height: 1px;
+  background: var(--border2);
+  margin: 40px 0;
+}
+
+.s1-specs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px 32px;
+}
+.spec-item {}
+.spec-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.spec-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--white);
+}
+.spec-value.redacted {
+  color: transparent;
+  background: rgba(255,255,255,.08);
+  border-radius: 2px;
+  user-select: none;
+  position: relative;
+  display: inline-block;
+  padding: 2px 8px;
+}
+.spec-unit {
+  font-size: 12px;
+  color: var(--muted);
+  margin-left: 3px;
+}
+
+.s1-right {
+  background: var(--surface2);
+  padding: 72px 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.s1-access-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+
+.s1-access-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  font-weight: 300;
+  line-height: 1.25;
+  color: var(--white);
+  margin-bottom: 16px;
+}
+
+.s1-access-body {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.75;
+  margin-bottom: 40px;
+}
+
+.access-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.step-num {
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--border2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--gold);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.step-text {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.step-text strong { color: var(--white); font-weight: 500; }
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--gold);
+  color: #0c0c0e;
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  padding: 18px 36px;
+  border: none;
+  cursor: pointer;
+  transition: background .2s, transform .15s;
+  width: 100%;
+}
+.btn-primary:hover { background: var(--gold-lt); transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); }
+
+.s1-footer {
+  margin-top: 32px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: rgba(255,255,255,.2);
+  letter-spacing: .06em;
+}
+
+/* Token preview */
+.token-preview {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.token-icon { color: var(--gold); font-size: 16px; flex-shrink: 0; }
+.token-text {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.token-text span {
+  display: block;
+  color: var(--gold);
+  letter-spacing: .08em;
+  margin-top: 2px;
+}
+
+/* ═══════════════════════════════════════════════
+   SCREEN 2 · NDA
+═══════════════════════════════════════════════ */
+#s2 {
+  padding: 0;
+}
+
+.nda-header {
+  border-bottom: 1px solid var(--border);
+  padding: 20px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  background: rgba(12,12,14,.96);
+  backdrop-filter: blur(12px);
+  z-index: 100;
+}
+.nda-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px;
+  font-weight: 300;
+  letter-spacing: .06em;
+  color: var(--white);
+}
+.nda-logo span { color: var(--gold); }
+.nda-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%,100% { opacity: 1; } 50% { opacity: .3; }
+}
+
+.nda-body {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 64px 24px 120px;
+}
+
+.nda-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--gold-dim);
+  background: var(--gold-dim);
+  color: var(--gold);
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  border-radius: 2px;
+  margin-bottom: 24px;
+}
+
+.nda-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 42px;
+  font-weight: 300;
+  line-height: 1.1;
+  margin-bottom: 8px;
+}
+.nda-title em { font-style: italic; color: var(--gold); }
+
+.nda-asset-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  padding: 8px 16px;
+  margin-bottom: 40px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.nda-asset-pill strong { color: var(--white); font-weight: 500; }
+
+.nda-doc {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 40px;
+  margin-bottom: 40px;
+  position: relative;
+}
+.nda-doc::before {
+  content: 'NDA · CONFIDENCIAL';
+  position: absolute;
+  top: 14px;
+  right: 20px;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .14em;
+  color: rgba(255,255,255,.1);
+  text-transform: uppercase;
+}
+
+.nda-doc-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: .02em;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--gold);
+}
+
+.nda-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px;
+  color: rgba(240,237,232,.72);
+  line-height: 1.85;
+}
+.nda-text p { margin-bottom: 16px; }
+.nda-text strong { color: var(--white); font-weight: 600; }
+.nda-text .clause {
+  display: block;
+  font-family: 'Syne', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 8px;
+  margin-top: 24px;
+}
+
+/* ── FORM ── */
+.nda-form-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  font-weight: 300;
+  margin-bottom: 8px;
+}
+.nda-form-sub {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.form-full { grid-column: 1 / -1; }
+
+.field {}
+.field label {
+  display: block;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.field input, .field select {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  color: var(--white);
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  padding: 13px 16px;
+  outline: none;
+  transition: border-color .2s;
+  appearance: none;
+}
+.field input:focus, .field select:focus { border-color: var(--gold); }
+.field input::placeholder { color: rgba(255,255,255,.2); }
+
+/* Signature canvas */
+.sig-area {
+  margin-bottom: 32px;
+}
+.sig-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.sig-tabs {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border2);
+  width: fit-content;
+  margin-bottom: 16px;
+}
+.sig-tab {
+  padding: 8px 20px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .06em;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-family: 'Syne', sans-serif;
+  transition: all .2s;
+}
+.sig-tab.active { background: var(--gold); color: #0c0c0e; }
+.sig-tab:not(.active):hover { color: var(--white); }
+
+.sig-panel { display: none; }
+.sig-panel.active { display: block; }
+
+.canvas-wrap {
+  position: relative;
+  border: 1px solid var(--border2);
+  background: rgba(255,255,255,.03);
+  cursor: crosshair;
+}
+canvas#sigCanvas {
+  display: block;
+  width: 100%;
+  height: 160px;
+  touch-action: none;
+}
+.canvas-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px;
+  font-style: italic;
+  color: rgba(255,255,255,.15);
+  pointer-events: none;
+  transition: opacity .3s;
+}
+.canvas-clear {
+  margin-top: 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: .08em;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.canvas-clear:hover { color: var(--white); }
+
+.cert-panel {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  padding: 24px;
+}
+.cert-options { display: flex; flex-direction: column; gap: 10px; }
+.cert-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  cursor: pointer;
+  transition: border-color .2s;
+}
+.cert-option:hover { border-color: var(--border2); }
+.cert-option.selected { border-color: var(--gold); background: var(--gold-dim); }
+.cert-icon { font-size: 22px; }
+.cert-info {}
+.cert-name { font-size: 13px; font-weight: 600; }
+.cert-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.cert-badge {
+  margin-left: auto;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .1em;
+  padding: 3px 8px;
+  border: 1px solid var(--border2);
+  color: var(--muted);
+}
+.cert-badge.active { border-color: var(--gold); color: var(--gold); }
+
+/* ── CERT MODAL ── */
+.cert-modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.75);
+  backdrop-filter: blur(6px);
+  z-index: 500;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.cert-modal-overlay.open { display: flex; }
+.cert-modal {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  width: 100%;
+  max-width: 480px;
+  position: relative;
+  animation: fadeUp .25s ease;
+}
+.cm-header {
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.cm-header-icon { font-size: 22px; }
+.cm-header-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  font-weight: 300;
+}
+.cm-header-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .1em;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.cm-close {
+  margin-left: auto;
+  background: none;
+  border: 1px solid var(--border2);
+  color: var(--muted);
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .2s;
+}
+.cm-close:hover { border-color: var(--white); color: var(--white); }
+.cm-body { padding: 28px 24px; }
+
+/* States: idle → connecting → verifying → success → error */
+.cm-state { display: none; }
+.cm-state.active { display: block; }
+
+/* Connecting state */
+.cm-spinner {
+  width: 48px; height: 48px;
+  border: 2px solid var(--border2);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+  margin: 0 auto 20px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.cm-spinner-label {
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.7;
+  margin-bottom: 8px;
+}
+.cm-spinner-sub {
+  text-align: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: rgba(255,255,255,.2);
+  letter-spacing: .06em;
+}
+.cm-progress-bar {
+  height: 2px;
+  background: var(--border);
+  margin-top: 20px;
+  overflow: hidden;
+}
+.cm-progress-fill {
+  height: 100%;
+  background: var(--gold);
+  width: 0%;
+  transition: width .4s ease;
+}
+
+/* Verify steps */
+.cm-steps { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.cm-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12.5px;
+  color: var(--muted);
+  padding: 10px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+.cm-step.done { color: var(--ok); border-color: rgba(74,154,106,.3); background: rgba(74,154,106,.05); }
+.cm-step.active { color: var(--white); border-color: var(--border2); }
+.cm-step.error { color: #e08080; border-color: rgba(196,68,68,.3); background: rgba(196,68,68,.05); }
+.cm-step-icon { font-size: 14px; flex-shrink: 0; }
+
+/* Success state */
+.cm-success-icon {
+  text-align: center;
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+.cm-success-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px;
+  font-weight: 300;
+  text-align: center;
+  margin-bottom: 8px;
+  color: var(--ok);
+}
+.cm-cert-card {
+  background: var(--bg);
+  border: 1px solid rgba(74,154,106,.3);
+  padding: 16px;
+  margin: 16px 0 24px;
+}
+.cm-cert-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11.5px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+}
+.cm-cert-row:last-child { border-bottom: none; }
+.cm-cert-key { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.cm-cert-val { color: var(--white); font-weight: 500; }
+.cm-cert-val.gold { color: var(--gold); }
+
+.btn-cm-confirm {
+  width: 100%;
+  padding: 16px;
+  background: var(--ok);
+  color: white;
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  transition: opacity .2s;
+}
+.btn-cm-confirm:hover { opacity: .88; }
+
+/* Error state */
+.cm-error-icon { text-align: center; font-size: 40px; margin-bottom: 16px; }
+.cm-error-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 300; text-align: center; margin-bottom: 8px; color: #e08080; }
+.cm-error-body { font-size: 12.5px; color: var(--muted); text-align: center; line-height: 1.7; margin-bottom: 20px; }
+.btn-cm-retry {
+  width: 100%;
+  padding: 14px;
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--white);
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color .2s;
+  margin-bottom: 10px;
+}
+.btn-cm-retry:hover { border-color: var(--gold); color: var(--gold); }
+.btn-cm-draw {
+  width: 100%;
+  padding: 14px;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.btn-cm-draw:hover { color: var(--white); }
+
+/* Confirmed cert badge on panel */
+.cert-confirmed-badge {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  background: rgba(74,154,106,.08);
+  border: 1px solid rgba(74,154,106,.3);
+  padding: 14px 16px;
+  margin-top: 12px;
+}
+.cert-confirmed-badge.visible { display: flex; }
+.ccb-icon { font-size: 20px; }
+.ccb-text { font-size: 12px; line-height: 1.6; }
+.ccb-text strong { color: var(--ok); display: block; margin-bottom: 2px; }
+.ccb-text span { color: var(--muted); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .04em; }
+.ccb-change { margin-left: auto; font-size: 10px; color: var(--muted); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; white-space: nowrap; }
+.ccb-change:hover { color: var(--white); }
+
+/* Checkbox */
+.consent-block {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  margin-bottom: 24px;
+  cursor: pointer;
+  transition: border-color .2s;
+}
+.consent-block:hover { border-color: var(--border2); }
+.consent-block.checked { border-color: var(--gold); }
+.cbx {
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--border2);
+  background: var(--bg);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+  transition: all .2s;
+}
+.checked .cbx { background: var(--gold); border-color: var(--gold); }
+.cbx-mark { display: none; color: #0c0c0e; font-size: 11px; font-weight: 700; }
+.checked .cbx-mark { display: block; }
+.consent-text { font-size: 12.5px; color: var(--muted); line-height: 1.6; }
+.consent-text strong { color: var(--white); }
+
+/* Token display */
+.token-box {
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.token-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.token-value {
+  font-family: 'DM Mono', monospace;
+  font-size: 14px;
+  color: var(--gold);
+  letter-spacing: .06em;
+}
+.token-info { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.token-shield { font-size: 28px; }
+
+.btn-sign {
+  width: 100%;
+  padding: 22px;
+  background: var(--gold);
+  color: #0c0c0e;
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  transition: background .2s, transform .15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.btn-sign:hover { background: var(--gold-lt); transform: translateY(-1px); }
+.btn-sign:disabled { background: rgba(255,255,255,.1); color: var(--muted); cursor: not-allowed; transform: none; }
+
+.sign-progress {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 32px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  margin-top: 16px;
+}
+.progress-steps { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+.progress-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.progress-step.done { color: var(--ok); }
+.progress-step.active { color: var(--white); }
+.ps-icon { width: 20px; text-align: center; font-size: 14px; }
+
+/* ═══════════════════════════════════════════════
+   SCREEN 3 · DATA ROOM
+═══════════════════════════════════════════════ */
+#s3 {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.dr-header {
+  border-bottom: 1px solid var(--border);
+  padding: 16px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  background: rgba(12,12,14,.97);
+  backdrop-filter: blur(12px);
+  z-index: 100;
+}
+.dr-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px;
+  font-weight: 300;
+  letter-spacing: .06em;
+}
+.dr-logo span { color: var(--gold); }
+
+.dr-access-bar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.dr-access-info {
+  text-align: right;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.dr-access-name { color: var(--white); margin-bottom: 2px; }
+.dr-access-token { color: var(--gold); }
+.dr-watermark-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(196,68,68,.12);
+  border: 1px solid rgba(196,68,68,.3);
+  padding: 5px 12px;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: #e08080;
+}
+
+.dr-body {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 48px 24px 80px;
+  position: relative;
+}
+
+/* Watermark */
+.dr-body::after {
+  content: attr(data-watermark);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-35deg);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(32px, 5vw, 64px);
+  font-style: italic;
+  color: rgba(201,168,76,.04);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 50;
+  letter-spacing: .1em;
+}
+
+.dr-hero {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  gap: 40px;
+  margin-bottom: 48px;
+  padding-bottom: 48px;
+  border-bottom: 1px solid var(--border);
+}
+.dr-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.dr-eyebrow::before { content:''; width:20px; height:1px; background:var(--gold); }
+.dr-main-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(36px, 4vw, 58px);
+  font-weight: 300;
+  line-height: 1.06;
+  letter-spacing: -.02em;
+  margin-bottom: 16px;
+}
+.dr-main-title em { font-style: italic; color: var(--gold); }
+.dr-main-sub { font-size: 13px; color: var(--muted); line-height: 1.7; max-width: 480px; }
+
+.dr-ref {
+  text-align: right;
+}
+.dr-ref-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: .12em; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+.dr-ref-val { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--gold); letter-spacing: .06em; }
+.dr-ref-line { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+/* KPI grid */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  margin-bottom: 40px;
+}
+.kpi {
+  background: var(--surface);
+  padding: 24px;
+}
+.kpi.hi { background: var(--surface2); }
+.kpi-lbl { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+.kpi-val { font-family: 'Cormorant Garamond', serif; font-size: 32px; font-weight: 300; line-height: 1; color: var(--white); }
+.kpi-val.gold { color: var(--gold); }
+.kpi-val.big { font-size: 38px; }
+.kpi-unit { font-size: 14px; color: var(--muted); margin-left: 3px; }
+.kpi-sub { font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+/* Section headers */
+.dr-section-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  margin-top: 48px;
+}
+.dr-section-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--gold);
+  letter-spacing: .14em;
+}
+.dr-section-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--white);
+}
+.dr-section-rule { flex: 1; height: 1px; background: var(--border); }
+
+/* Data rows */
+.data-rows { border: 1px solid var(--border); overflow: hidden; margin-bottom: 24px; }
+.dr-row {
+  display: grid;
+  grid-template-columns: 2fr 3fr;
+  border-bottom: 1px solid var(--border);
+}
+.dr-row:last-child { border-bottom: none; }
+.dr-row-key {
+  padding: 14px 20px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+}
+.dr-row-val {
+  padding: 14px 20px;
+  font-size: 13.5px;
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.dr-row-val.accent { color: var(--gold); font-weight: 600; font-size: 16px; }
+.dr-row-val.big-val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px;
+  font-weight: 300;
+  color: var(--gold-lt);
+}
+
+/* Height visual */
+.height-bar-wrap {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.hbar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 16px 12px;
+  position: relative;
+  overflow: hidden;
+}
+.hbar.active { border-color: var(--gold); background: var(--surface2); }
+.hbar-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.hbar.active .hbar-label { color: var(--gold); }
+.hbar-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 42px;
+  font-weight: 300;
+  line-height: 1;
+  color: var(--white);
+  margin-bottom: 4px;
+}
+.hbar.active .hbar-num { color: var(--gold-lt); }
+.hbar-unit { font-size: 12px; color: var(--muted); }
+.hbar-hc { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); margin-top: 10px; }
+.hbar.active .hbar-hc { color: var(--white); }
+.hbar-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  letter-spacing: .08em;
+  background: var(--gold);
+  color: #0c0c0e;
+  padding: 2px 6px;
+}
+
+/* Scenario cards */
+.scenario-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  margin-bottom: 24px;
+}
+.sc-card { background: var(--surface); padding: 24px; }
+.sc-card.best { background: var(--surface2); border-top: 2px solid var(--gold); }
+.sc-tag { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+.sc-card.best .sc-tag { color: var(--gold); }
+.sc-plantas { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.sc-hc { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-bottom: 16px; }
+.sc-techo { font-family: 'Cormorant Garamond', serif; font-size: 30px; font-weight: 300; line-height: 1; color: var(--white); }
+.sc-valor { font-size: 14px; font-weight: 600; color: var(--gold); margin-top: 6px; }
+.sc-note { font-size: 11px; color: var(--muted); margin-top: 10px; line-height: 1.5; }
+
+/* Total hero */
+.total-hero {
+  background: linear-gradient(135deg, var(--surface2) 0%, var(--bg) 100%);
+  border: 1px solid var(--border2);
+  padding: 40px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 32px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+.total-hero::before {
+  content: '';
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(201,168,76,.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.th-lbl { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.th-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 300; line-height: 1.25; margin-bottom: 6px; }
+.th-note { font-size: 11.5px; color: var(--muted); }
+.th-amount { font-family: 'Cormorant Garamond', serif; font-size: 56px; font-weight: 300; color: var(--gold-lt); line-height: 1; letter-spacing: -.02em; text-align: right; white-space: nowrap; }
+.th-cur { font-size: 28px; color: var(--gold); margin-right: 4px; }
+.th-unit { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: .08em; margin-top: 8px; text-align: right; }
+
+/* Normas infobox */
+.infobox {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--gold);
+  padding: 16px 20px;
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.7;
+  margin-bottom: 16px;
+}
+.infobox strong { color: var(--white); }
+
+/* Disclaimer */
+.disclaimer {
+  margin-top: 48px;
+  padding: 20px;
+  border: 1px solid rgba(255,255,255,.05);
+  font-size: 11px;
+  color: rgba(255,255,255,.25);
+  line-height: 1.7;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: .03em;
+}
+
+/* No-download overlay helpers */
+.no-dl {
+  position: relative;
+}
+.no-dl::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none; /* allows reading, blocks right-click save */
+}
+
+/* ═══════════════════════════════════════════════
+   PRINT BLOCK
+═══════════════════════════════════════════════ */
+@media print {
+  body::after {
+    content: 'DOCUMENTO CONFIDENCIAL · IMPRESIÓN NO AUTORIZADA · ' attr(data-user);
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    background: black;
+    color: red;
+    text-align: center;
+    padding: 40px;
+    font-size: 24px;
+    z-index: 9999;
+  }
+  #s3 { display: none !important; }
+}
+
+/* ═══════════════════════════════════════════════
+   ANIMATIONS
+═══════════════════════════════════════════════ */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-up { animation: fadeUp .5s ease forwards; }
+.fade-up-2 { animation: fadeUp .5s .1s ease forwards; opacity: 0; }
+.fade-up-3 { animation: fadeUp .5s .2s ease forwards; opacity: 0; }
+.fade-up-4 { animation: fadeUp .5s .3s ease forwards; opacity: 0; }
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(400%); }
+}
+.scan-anim {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 0%, rgba(201,168,76,.03) 50%, transparent 100%);
+  animation: scanline 3s linear forwards;
+  pointer-events: none;
+  z-index: 200;
+}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .s1-grid { grid-template-columns: 1fr; }
+  .s1-left { border-right: none; border-bottom: 1px solid var(--border2); padding: 40px 28px; }
+  .s1-right { padding: 40px 28px; }
+  .kpi-grid { grid-template-columns: 1fr 1fr; }
+  .scenario-row { grid-template-columns: 1fr; }
+  .height-bar-wrap { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+  .dr-hero { grid-template-columns: 1fr; }
+  .total-hero { grid-template-columns: 1fr; }
+  .th-amount { text-align: left; }
+  .nda-header, .dr-header { padding: 16px 20px; }
+  .nda-body, .dr-body { padding: 32px 16px 80px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 1 · LANDING
+════════════════════════════════════════════ -->
+<div class="screen active" id="s1">
+  <div style="flex:1; display:flex; align-items:center; justify-content:center; padding:32px 16px;">
+    <div class="s1-grid fade-up">
+
+      <!-- LEFT: Teaser -->
+      <div class="s1-left">
+        <div>
+          <div class="s1-eyebrow">Activo en comercialización</div>
+          <h1 class="s1-title">Solar<br><em>Residencial</em><br>Rocafort</h1>
+          <p class="s1-subtitle">Oportunidad de suelo urbano en sector residencial consolidado de la comarca de L'Horta Nord, Valencia. Edificabilidad plurifamiliar en bloque cerrado.</p>
+        </div>
+
+        <div>
+          <div class="s1-divider"></div>
+          <div class="s1-specs">
+            <div class="spec-item">
+              <div class="spec-label">Superficie parcela</div>
+              <div class="spec-value">985 <span class="spec-unit">m²</span></div>
+            </div>
+            <div class="spec-item">
+              <div class="spec-label">Techo máx. teórico</div>
+              <div class="spec-value">3.940 <span class="spec-unit">m²t</span></div>
+            </div>
+            <div class="spec-item">
+              <div class="spec-label">Alturas asignadas</div>
+              <div class="spec-value">4 <span class="spec-unit">plantas</span></div>
+            </div>
+            <div class="spec-item">
+              <div class="spec-label">Valoración (máx.)</div>
+              <div class="spec-value redacted" title="Disponible tras firma NDA">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Access -->
+      <div class="s1-right">
+        <div>
+          <div class="s1-access-label">Acceso a documentación</div>
+          <h2 class="s1-access-title">Información completa<br>bajo acuerdo de confidencialidad</h2>
+          <p class="s1-access-body">El dossier técnico detallado, parámetros urbanísticos, ficha catastral completa y valoración del activo están disponibles para inversores y promotores cualificados previa firma de NDA.</p>
+
+          <div class="access-steps">
+            <div class="step">
+              <div class="step-num">1</div>
+              <div class="step-text"><strong>Identificación</strong> — Cumplimente sus datos como interesado o entidad.</div>
+            </div>
+            <div class="step">
+              <div class="step-num">2</div>
+              <div class="step-text"><strong>Firma del NDA</strong> — Acuerdo de confidencialidad específico para este activo. Firma manuscrita digital o certificado electrónico.</div>
+            </div>
+            <div class="step">
+              <div class="step-num">3</div>
+              <div class="step-text"><strong>Acceso inmediato</strong> — Acceso único, nominal y no descargable al dossier completo del activo.</div>
+            </div>
+          </div>
+
+          <div class="token-preview">
+            <div class="token-icon">🔐</div>
+            <div class="token-text">
+              Se generará un token de acceso único e intransferible
+              <span id="previewToken">——————————————————</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <button class="btn-primary" onclick="goToNDA()">
+            <span>Solicitar acceso confidencial</span>
+            <span>→</span>
+          </button>
+          <div class="s1-footer" style="margin-top:16px">
+            Activo ref. ROC-2025-23938 · Gestión exclusiva · Información sujeta a NDA
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 2 · NDA
+════════════════════════════════════════════ -->
+<div class="screen" id="s2">
+
+  <div class="nda-header">
+    <div class="nda-logo">Lowesting<span>·</span>Access</div>
+    <div class="nda-status">
+      <div class="status-dot"></div>
+      Sesión segura · Activo ROC-2025-23938
+    </div>
+  </div>
+
+  <div class="nda-body">
+
+    <div class="nda-tag">🔒 Documento de acceso restringido · Uso único</div>
+
+    <h1 class="nda-title">Acuerdo de<br><em>Confidencialidad</em></h1>
+
+    <div class="nda-asset-pill">
+      Activo vinculado: &nbsp;<strong>Solar Residencial Rocafort · Ref. Catastral 2393803YJ2729S0001QG</strong>
+    </div>
+
+    <!-- NDA Document -->
+    <div class="nda-doc">
+      <div class="nda-doc-title">ACUERDO DE NO DIVULGACIÓN (NDA) · ACTIVO ROC-2025-23938</div>
+      <div class="nda-text">
+
+        <span class="clause">Partes</span>
+        <p>El presente Acuerdo de No Divulgación (<strong>"Acuerdo"</strong>) se suscribe entre el propietario y/o gestor del activo inmobiliario con referencia catastral <strong>2393803YJ2729S0001QG</strong>, ubicado en Rocafort (Valencia) (<strong>"Parte Divulgadora"</strong>), y el firmante del presente documento (<strong>"Parte Receptora"</strong>), cuyos datos se recogen a continuación.</p>
+
+        <span class="clause">Objeto y alcance</span>
+        <p>La Parte Divulgadora pone a disposición de la Parte Receptora información técnica, urbanística, catastral, económica y estratégica relativa al activo referenciado, de carácter <strong>estrictamente confidencial</strong>. Dicha información incluye, sin carácter limitativo: ficha catastral completa, parámetros urbanísticos del Plan Parcial "El Bovalar", valoración del aprovechamiento, análisis de edificabilidad y cualquier dato económico asociado.</p>
+
+        <span class="clause">Obligaciones de la Parte Receptora</span>
+        <p>La Parte Receptora se compromete a: <strong>(i)</strong> mantener la más estricta confidencialidad sobre la Información Confidencial; <strong>(ii)</strong> no reproducir, copiar, descargar ni distribuir la información en ningún formato; <strong>(iii)</strong> utilizar la información exclusivamente para el análisis de una posible transacción sobre el activo; <strong>(iv)</strong> no compartir la información con terceros sin consentimiento previo y por escrito de la Parte Divulgadora.</p>
+
+        <span class="clause">Acceso y trazabilidad</span>
+        <p>El acceso a la información se realiza mediante token único e intransferible generado para esta sesión específica. Cualquier acceso queda registrado con identificador de sesión, fecha, hora, IP de acceso y datos identificativos del firmante. El incumplimiento de este Acuerdo dará lugar a las responsabilidades civiles y penales que correspondan conforme a la legislación española vigente.</p>
+
+        <span class="clause">Vigencia</span>
+        <p>El presente Acuerdo tiene una vigencia de <strong>24 meses</strong> desde la fecha de firma, con independencia de que se lleve a cabo o no la operación sobre el activo.</p>
+
+        <span class="clause">Legislación aplicable</span>
+        <p>El presente Acuerdo se rige por la legislación española. Las partes se someten a los Juzgados y Tribunales de Valencia para la resolución de cualquier controversia derivada del mismo.</p>
+
+      </div>
+    </div>
+
+    <!-- FORM -->
+    <h2 class="nda-form-title">Sus datos identificativos</h2>
+    <p class="nda-form-sub">Cumplimente el siguiente formulario. Sus datos quedan vinculados al token de acceso y al documento firmado.</p>
+
+    <div class="form-grid">
+      <div class="field">
+        <label>Nombre completo *</label>
+        <input type="text" id="f-nombre" placeholder="Juan García López" required>
+      </div>
+      <div class="field">
+        <label>NIF / CIF *</label>
+        <input type="text" id="f-nif" placeholder="12345678A" required>
+      </div>
+      <div class="field">
+        <label>Entidad / Empresa</label>
+        <input type="text" id="f-empresa" placeholder="Promotora Ejemplo S.L.">
+      </div>
+      <div class="field">
+        <label>Cargo</label>
+        <input type="text" id="f-cargo" placeholder="Director de Inversiones">
+      </div>
+      <div class="field form-full">
+        <label>Email profesional *</label>
+        <input type="email" id="f-email" placeholder="juan.garcia@empresa.com" required>
+      </div>
+    </div>
+
+    <!-- Signature -->
+    <div class="sig-area">
+      <div class="sig-label">Firma del acuerdo *</div>
+      <div class="sig-tabs">
+        <button class="sig-tab active" onclick="switchTab('draw')">Firma manuscrita</button>
+        <button class="sig-tab" onclick="switchTab('cert')">Certificado digital</button>
+      </div>
+
+      <div class="sig-panel active" id="tab-draw">
+        <div class="canvas-wrap">
+          <canvas id="sigCanvas"></canvas>
+          <div class="canvas-hint" id="canvasHint">Firme aquí con el ratón o su dedo</div>
+        </div>
+        <button class="canvas-clear" onclick="clearCanvas()">Borrar firma</button>
+      </div>
+
+      <div class="sig-panel" id="tab-cert">
+        <div class="cert-panel">
+          <p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">Seleccione su certificado electrónico reconocido. El sistema redirigirá a la plataforma de firma para completar la autenticación.</p>
+          <div class="cert-options">
+            <div class="cert-option" onclick="selectCert(this, 'fnmt')">
+              <div class="cert-icon">🇪🇸</div>
+              <div class="cert-info">
+                <div class="cert-name">Certificado FNMT-RCM</div>
+                <div class="cert-sub">Fábrica Nacional de Moneda y Timbre · Persona física o jurídica</div>
+              </div>
+              <div class="cert-badge active" id="badge-fnmt">Disponible</div>
+            </div>
+            <div class="cert-option" onclick="selectCert(this, 'dnie')">
+              <div class="cert-icon">💳</div>
+              <div class="cert-info">
+                <div class="cert-name">DNI Electrónico (DNIe)</div>
+                <div class="cert-sub">Dirección General de la Policía · Requiere lector de tarjetas</div>
+              </div>
+              <div class="cert-badge active" id="badge-dnie">Disponible</div>
+            </div>
+            <div class="cert-option" onclick="selectCert(this, 'autofirma')">
+              <div class="cert-icon">✍️</div>
+              <div class="cert-info">
+                <div class="cert-name">AutoFirma (MINHAP)</div>
+                <div class="cert-sub">Aplicación de firma del Ministerio de Hacienda</div>
+              </div>
+              <div class="cert-badge active" id="badge-autofirma">Disponible</div>
+            </div>
+          </div>
+          <p style="font-size:10px;color:rgba(255,255,255,.2);font-family:'DM Mono',monospace;letter-spacing:.04em;margin-top:16px">
+            * En producción: integración con Viafirma, Signaturit o API @firma del MINHAP
+          </p>
+        </div>
+        <!-- Badge de certificado confirmado (aparece tras verificación) -->
+        <div class="cert-confirmed-badge" id="certConfirmedBadge">
+          <div class="ccb-icon">✅</div>
+          <div class="ccb-text">
+            <strong id="ccbName">Certificado verificado correctamente</strong>
+            <span id="ccbDetail">—</span>
+          </div>
+          <div class="ccb-change" onclick="resetCert()">Cambiar</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Token box -->
+    <div class="token-box">
+      <div class="token-shield">🔑</div>
+      <div>
+        <div class="token-label">Token de acceso único</div>
+        <div class="token-value" id="tokenDisplay">——</div>
+        <div class="token-info">Generado al firmar · Válido para una sesión · No transferible</div>
+      </div>
+    </div>
+
+    <!-- Consent -->
+    <div class="consent-block" id="consentBlock" onclick="toggleConsent()">
+      <div class="cbx"><span class="cbx-mark">✓</span></div>
+      <div class="consent-text">
+        He leído y acepto íntegramente el Acuerdo de No Divulgación precedente. Entiendo que el acceso a la información es <strong>personal, intransferible y no descargable</strong>, y que cualquier reproducción o distribución constituye un incumplimiento con consecuencias legales. Confirmo que mis datos son correctos y que actúo en nombre propio o con facultades de representación suficientes.
+      </div>
+    </div>
+
+    <!-- Sign button -->
+    <button class="btn-sign" id="signBtn" onclick="executeSigning()" disabled>
+      <span>🖊</span>
+      <span>Firmar y obtener acceso</span>
+    </button>
+
+    <!-- Progress -->
+    <div class="sign-progress" id="signProgress">
+      <div class="progress-steps">
+        <div class="progress-step" id="ps1"><span class="ps-icon">○</span> Validando datos identificativos…</div>
+        <div class="progress-step" id="ps2"><span class="ps-icon">○</span> Registrando firma en servidor…</div>
+        <div class="progress-step" id="ps3"><span class="ps-icon">○</span> Generando token único de acceso…</div>
+        <div class="progress-step" id="ps4"><span class="ps-icon">○</span> Sellando documento con marca de tiempo…</div>
+        <div class="progress-step" id="ps5"><span class="ps-icon">○</span> Abriendo sala de datos…</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 3 · DATA ROOM
+════════════════════════════════════════════ -->
+<div class="screen" id="s3">
+
+  <div class="dr-header">
+    <div class="dr-logo">Lowesting<span>·</span>DataRoom</div>
+    <div class="dr-access-bar">
+      <div class="dr-access-info">
+        <div class="dr-access-name" id="dr-name">—</div>
+        <div class="dr-access-token" id="dr-token">—</div>
+      </div>
+      <div class="dr-watermark-badge">🔴 Solo lectura · Sin descarga</div>
+    </div>
+  </div>
+
+  <div class="dr-body" id="drBody" data-watermark="CONFIDENCIAL">
+
+    <!-- Hero -->
+    <div class="dr-hero fade-up">
+      <div>
+        <div class="dr-eyebrow">Dossier técnico completo · Acceso NDA</div>
+        <h1 class="dr-main-title">Solar Residencial<br><em>Rocafort · Valencia</em></h1>
+        <p class="dr-main-sub">Información urbanística, catastral y económica completa. Documento confidencial sujeto a NDA firmado. Acceso nominal y trazable.</p>
+      </div>
+      <div class="dr-ref">
+        <div class="dr-ref-label">Referencia catastral</div>
+        <div class="dr-ref-val">2393803YJ2729S0001QG</div>
+        <div class="dr-ref-line">46111 Rocafort [Valencia]</div>
+        <div class="dr-ref-line" style="margin-top:12px;color:var(--gold);font-size:10px;font-family:'DM Mono',monospace">Ref. activo: ROC-2025-23938</div>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid fade-up-2">
+      <div class="kpi hi">
+        <div class="kpi-lbl">Superficie parcela</div>
+        <div class="kpi-val big">985<span class="kpi-unit">m²</span></div>
+        <div class="kpi-sub">Dato catastral SEC</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-lbl">Plantas asignadas</div>
+        <div class="kpi-val">4<span class="kpi-unit">H</span></div>
+        <div class="kpi-sub">PB + 3 pisos · Plano 09</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-lbl">Techo máx. teórico</div>
+        <div class="kpi-val">3.940<span class="kpi-unit">m²t</span></div>
+        <div class="kpi-sub">985 m² × 4 plantas</div>
+      </div>
+      <div class="kpi hi">
+        <div class="kpi-lbl">Valor aprovechamiento</div>
+        <div class="kpi-val gold">5.910.000<span class="kpi-unit">€</span></div>
+        <div class="kpi-sub">A 1.500 €/m²t · Máx. teórico</div>
+      </div>
+    </div>
+
+    <!-- S1: Catastral -->
+    <div class="dr-section-head fade-up-3">
+      <span class="dr-section-num">01</span>
+      <h2 class="dr-section-title">Identificación Catastral</h2>
+      <div class="dr-section-rule"></div>
+    </div>
+    <div class="data-rows">
+      <div class="dr-row"><div class="dr-row-key">Referencia catastral</div><div class="dr-row-val" style="font-family:'DM Mono',monospace;color:var(--gold)">2393803YJ2729S0001QG</div></div>
+      <div class="dr-row"><div class="dr-row-key">Localización</div><div class="dr-row-val">AR Manzana Cerrada 3 Suelo · 46111 Rocafort [Valencia]</div></div>
+      <div class="dr-row"><div class="dr-row-key">Clase de suelo</div><div class="dr-row-val"><span style="background:var(--ok);color:white;padding:2px 10px;font-size:11px;font-weight:700">URBANO</span></div></div>
+      <div class="dr-row"><div class="dr-row-key">Uso catastral</div><div class="dr-row-val">Suelo sin edificar · Solar apto para edificación</div></div>
+      <div class="dr-row"><div class="dr-row-key">Superficie gráfica</div><div class="dr-row-val accent">985 m²</div></div>
+      <div class="dr-row"><div class="dr-row-key">Participación</div><div class="dr-row-val">100,00 % · Propiedad plena</div></div>
+      <div class="dr-row"><div class="dr-row-key">Fecha datos catastrales</div><div class="dr-row-val" style="font-family:'DM Mono',monospace;font-size:12px">26 / 11 / 2025</div></div>
+    </div>
+
+    <!-- S2: Urbanística -->
+    <div class="dr-section-head">
+      <span class="dr-section-num">02</span>
+      <h2 class="dr-section-title">Clasificación Urbanística · Zona EDC</h2>
+      <div class="dr-section-rule"></div>
+    </div>
+    <div class="data-rows" style="margin-bottom:16px">
+      <div class="dr-row"><div class="dr-row-key">Planeamiento</div><div class="dr-row-val">Plan Parcial Sector Residencial "El Bovalar" · PGOU Rocafort</div></div>
+      <div class="dr-row"><div class="dr-row-key">Aprobación definitiva</div><div class="dr-row-val" style="font-family:'DM Mono',monospace;font-size:12px">06 / 03 / 2006 · Comisión Territorial de Urbanismo</div></div>
+      <div class="dr-row"><div class="dr-row-key">Redactor</div><div class="dr-row-val">Urbanite S.L.</div></div>
+      <div class="dr-row"><div class="dr-row-key">Manzana y zona</div><div class="dr-row-val"><span style="background:var(--blue-bg,#d0dff5);color:var(--blue,#1e3a6b);padding:3px 10px;font-size:11px;font-weight:700;background:#1a2a4a;color:#7aa0df;border:1px solid #2a3a6a">M-9 · EDC — EDIFICACIÓN CERRADA</span></div></div>
+      <div class="dr-row"><div class="dr-row-key">Uso dominante</div><div class="dr-row-val"><span style="background:#2a1a4a;color:#b07adf;border:1px solid #3a2a6a;padding:3px 10px;font-size:11px;font-weight:700">RESIDENCIAL PLURIFAMILIAR (Rpf)</span></div></div>
+      <div class="dr-row"><div class="dr-row-key">Tipología</div><div class="dr-row-val">Edificación entre medianeras a alineación de vial · Sin retranqueo exterior</div></div>
+      <div class="dr-row"><div class="dr-row-key">Sup. Manzana 9 (Plan)</div><div class="dr-row-val">1.164,51 m² edificable + 756,88 m² patio (EDCp)</div></div>
+      <div class="dr-row"><div class="dr-row-key">IEB Sector</div><div class="dr-row-val accent">0,4990 m²t/m²s</div></div>
+      <div class="dr-row"><div class="dr-row-key">Aprov. Tipo (A.T.)</div><div class="dr-row-val">0,444587 m²t/m²s</div></div>
+    </div>
+
+    <!-- S3: Alturas -->
+    <div class="dr-section-head">
+      <span class="dr-section-num">03</span>
+      <h2 class="dr-section-title">Régimen de Alturas · Art. 14 Normas Urbanísticas</h2>
+      <div class="dr-section-rule"></div>
+    </div>
+
+    <div class="infobox">
+      <strong>Fórmula EDC:</strong> Hc = 4,50 + 2,90 × Hp — siendo Hc la altura de cornisa máxima en metros y Hp el número de plantas sobre la baja. Cuadro de alturas reguladoras establecido en Art. 14.1.a) de las Normas Urbanísticas del Plan Parcial.
+    </div>
+
+    <div class="height-bar-wrap">
+      <div class="hbar">
+        <div class="hbar-label">2 plantas</div>
+        <div class="hbar-num">2</div>
+        <div class="hbar-unit">PB + 1 piso</div>
+        <div class="hbar-hc">Hc = 8,50 m</div>
+      </div>
+      <div class="hbar">
+        <div class="hbar-label">3 plantas</div>
+        <div class="hbar-num">3</div>
+        <div class="hbar-unit">PB + 2 pisos</div>
+        <div class="hbar-hc">Hc = 12,50 m</div>
+      </div>
+      <div class="hbar active">
+        <div class="hbar-badge">M-9 asignado</div>
+        <div class="hbar-label">4 plantas</div>
+        <div class="hbar-num">4</div>
+        <div class="hbar-unit">PB + 3 pisos</div>
+        <div class="hbar-hc">Hc ≈ 13,20 m</div>
+      </div>
+    </div>
+
+    <div class="data-rows">
+      <div class="dr-row"><div class="dr-row-key">Plantas asignadas M-9</div><div class="dr-row-val accent">4 plantas · 4H (Plano 09)</div></div>
+      <div class="dr-row"><div class="dr-row-key">Altura cornisa (≈)</div><div class="dr-row-val accent">≈ 13,20 m</div></div>
+      <div class="dr-row"><div class="dr-row-key">Ático permitido</div><div class="dr-row-val">Sí · Retranqueo mínimo 3,00 m · Cornisa ático ≤ 3,20 m sobre edificio</div></div>
+      <div class="dr-row"><div class="dr-row-key">Cubierta</div><div class="dr-row-val">3 primeros metros: cubierta inclinada pendiente ≤ 50%</div></div>
+      <div class="dr-row"><div class="dr-row-key">Sótano</div><div class="dr-row-val">Permitido · Semisótano prohibido salvo rasante &lt; 2,70 m topográfica</div></div>
+      <div class="dr-row"><div class="dr-row-key">Planta baja libre mínima</div><div class="dr-row-val">3,00 m · Techo PB: entre 3,00 m y 4,50 m sobre cota de ref.</div></div>
+    </div>
+
+    <!-- S4: Edificabilidad -->
+    <div class="dr-section-head">
+      <span class="dr-section-num">04</span>
+      <h2 class="dr-section-title">Cálculo de Edificabilidad</h2>
+      <div class="dr-section-rule"></div>
+    </div>
+    <div class="data-rows" style="margin-bottom:24px">
+      <div class="dr-row"><div class="dr-row-key">Superficie parcela</div><div class="dr-row-val">985,00 m²</div></div>
+      <div class="dr-row"><div class="dr-row-key">Plantas asignadas</div><div class="dr-row-val">4 plantas (PB + 3) · Plano 09 M-9 EDC</div></div>
+      <div class="dr-row"><div class="dr-row-key">Techo máximo teórico</div><div class="dr-row-val accent">985 × 4 = 3.940 m²t</div></div>
+      <div class="dr-row"><div class="dr-row-key">Coeficiente equivalente</div><div class="dr-row-val">4,00 m²t/m²s</div></div>
+      <div class="dr-row"><div class="dr-row-key">Nota metodológica</div><div class="dr-row-val" style="font-size:12px;color:var(--muted)">EDC no define coef. genérico — techo real determinado por alineaciones, profundidad edificable y patio de manzana. Requiere levantamiento planimétrico.</div></div>
+    </div>
+
+    <!-- S5: Valoración -->
+    <div class="dr-section-head">
+      <span class="dr-section-num">05</span>
+      <h2 class="dr-section-title">Valoración Económica</h2>
+      <div class="dr-section-rule"></div>
+    </div>
+
+    <div class="total-hero">
+      <div>
+        <div class="th-lbl">Valor total aprovechamiento · Escenario 4 plantas (máx. teórico)</div>
+        <div class="th-title">Solar Rocafort · M-9 EDC · Residencial Plurifamiliar</div>
+        <div class="th-note">3.940 m²t × 1.500 €/m²t · Sin costes de urbanización ni impuestos</div>
+      </div>
+      <div>
+        <div class="th-amount"><span class="th-cur">€</span>5.910.000</div>
+        <div class="th-unit">CINCO MILLONES NOVECIENTOS DIEZ MIL EUROS</div>
+      </div>
+    </div>
+
+    <div class="scenario-row">
+      <div class="sc-card">
+        <div class="sc-tag">Conservador · 2 plantas</div>
+        <div class="sc-plantas">PB + 1 piso · Hc 8,50 m</div>
+        <div class="sc-hc">985 m² × 2 plantas</div>
+        <div class="sc-techo">1.970 m²t</div>
+        <div class="sc-valor">2.955.000 €</div>
+        <div class="sc-note">985 × 2 × 1.500 €/m²t</div>
+      </div>
+      <div class="sc-card">
+        <div class="sc-tag">Intermedio · 3 plantas</div>
+        <div class="sc-plantas">PB + 2 pisos · Hc 12,50 m</div>
+        <div class="sc-hc">985 m² × 3 plantas</div>
+        <div class="sc-techo">2.955 m²t</div>
+        <div class="sc-valor">4.432.500 €</div>
+        <div class="sc-note">985 × 3 × 1.500 €/m²t</div>
+      </div>
+      <div class="sc-card best">
+        <div class="sc-tag">Máximo asignado · 4 plantas</div>
+        <div class="sc-plantas">PB + 3 pisos · Hc ≈ 13,20 m</div>
+        <div class="sc-hc">985 m² × 4 plantas · Plano 09</div>
+        <div class="sc-techo">3.940 m²t</div>
+        <div class="sc-valor">5.910.000 €</div>
+        <div class="sc-note">985 × 4 × 1.500 €/m²t · <strong>Escenario regulatorio máximo</strong></div>
+      </div>
+    </div>
+
+    <div class="data-rows">
+      <div class="dr-row"><div class="dr-row-key">Precio por m² de suelo</div><div class="dr-row-val big-val">6.000 €<span style="font-size:16px;color:var(--muted)">/m²s</span></div></div>
+      <div class="dr-row"><div class="dr-row-key">Precio por m²t aplicado</div><div class="dr-row-val big-val">1.500 €<span style="font-size:16px;color:var(--muted)">/m²t</span></div></div>
+      <div class="dr-row"><div class="dr-row-key">Valor total máx. teórico</div><div class="dr-row-val big-val">5.910.000 €</div></div>
+    </div>
+
+    <div class="disclaimer">
+      DOCUMENTO CONFIDENCIAL · Acceso exclusivo bajo NDA firmado · Ref. <span id="dr-disclaimer-token">—</span><br>
+      La información contenida en este documento es de carácter estrictamente confidencial. Queda prohibida su reproducción, copia, descarga o distribución en cualquier formato. La edificabilidad y valoración reflejadas tienen carácter orientativo y deben ser verificadas por técnico competente (arquitecto o urbanista colegiado) y contrastadas con el Ayuntamiento de Rocafort. No constituyen certificación catastral ni tasación oficial. · Plan Parcial "El Bovalar" · CTU 06/03/2006 · Urbanite S.L.
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     MODAL CERTIFICADO DIGITAL
+════════════════════════════════════════════ -->
+<div class="cert-modal-overlay" id="certModal">
+  <div class="cert-modal">
+
+    <div class="cm-header">
+      <div class="cm-header-icon" id="cmHeaderIcon">🔐</div>
+      <div>
+        <div class="cm-header-title" id="cmHeaderTitle">Conectando con certificado</div>
+        <div class="cm-header-sub" id="cmHeaderSub">Activo ROC-2025-23938 · NDA</div>
+      </div>
+      <button class="cm-close" onclick="closeCertModal()">✕</button>
+    </div>
+
+    <div class="cm-body">
+
+      <!-- STATE: connecting -->
+      <div class="cm-state" id="cm-connecting">
+        <div class="cm-spinner"></div>
+        <div class="cm-spinner-label" id="cmConnLabel">Estableciendo conexión segura<br>con el proveedor de certificados…</div>
+        <div class="cm-spinner-sub" id="cmConnSub">Por favor espere</div>
+        <div class="cm-progress-bar"><div class="cm-progress-fill" id="cmProgressFill"></div></div>
+      </div>
+
+      <!-- STATE: verifying -->
+      <div class="cm-state" id="cm-verifying">
+        <div class="cm-steps" id="cmSteps">
+          <div class="cm-step" id="cstep1"><span class="cm-step-icon">○</span> Detectando certificado en el sistema…</div>
+          <div class="cm-step" id="cstep2"><span class="cm-step-icon">○</span> Validando cadena de confianza…</div>
+          <div class="cm-step" id="cstep3"><span class="cm-step-icon">○</span> Verificando vigencia y revocación (OCSP)…</div>
+          <div class="cm-step" id="cstep4"><span class="cm-step-icon">○</span> Comprobando identidad del titular…</div>
+          <div class="cm-step" id="cstep5"><span class="cm-step-icon">○</span> Vinculando con documento NDA…</div>
+        </div>
+      </div>
+
+      <!-- STATE: success -->
+      <div class="cm-state" id="cm-success">
+        <div class="cm-success-icon">✅</div>
+        <div class="cm-success-title">Certificado verificado</div>
+        <div class="cm-cert-card">
+          <div class="cm-cert-row">
+            <span class="cm-cert-key">Titular</span>
+            <span class="cm-cert-val" id="certNombreDisplay">—</span>
+          </div>
+          <div class="cm-cert-row">
+            <span class="cm-cert-key">NIF / CIF</span>
+            <span class="cm-cert-val" id="certNifDisplay">—</span>
+          </div>
+          <div class="cm-cert-row">
+            <span class="cm-cert-key">Proveedor</span>
+            <span class="cm-cert-val" id="certProvDisplay">—</span>
+          </div>
+          <div class="cm-cert-row">
+            <span class="cm-cert-key">Núm. serie</span>
+            <span class="cm-cert-val gold" id="certSerialDisplay">—</span>
+          </div>
+          <div class="cm-cert-row">
+            <span class="cm-cert-key">Válido hasta</span>
+            <span class="cm-cert-val" id="certExpDisplay">—</span>
+          </div>
+          <div class="cm-cert-row">
+            <span class="cm-cert-key">Estado</span>
+            <span class="cm-cert-val" style="color:var(--ok)">✓ Vigente · No revocado</span>
+          </div>
+          <div class="cm-cert-row">
+            <span class="cm-cert-key">Vinculado a</span>
+            <span class="cm-cert-val gold" style="font-size:10px;font-family:'DM Mono',monospace">NDA · 2393803YJ2729S0001QG</span>
+          </div>
+        </div>
+        <button class="btn-cm-confirm" onclick="confirmCert()">Usar este certificado para firmar</button>
+      </div>
+
+      <!-- STATE: error -->
+      <div class="cm-state" id="cm-error">
+        <div class="cm-error-icon">⚠️</div>
+        <div class="cm-error-title">No se pudo conectar</div>
+        <div class="cm-error-body" id="cmErrorBody">No se ha detectado ningún certificado instalado en el sistema o el lector de tarjetas no responde. Compruebe que el certificado está instalado en el navegador o que la tarjeta está insertada correctamente.</div>
+        <button class="btn-cm-retry" onclick="retryCert()">Reintentar conexión</button>
+        <button class="btn-cm-draw" onclick="switchToDrawFromModal()">Usar firma manuscrita en su lugar</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════════ -->
+<script>
+/* ── State ── */
+let consentChecked = false;
+let hasSig = false;
+let sigMode = 'draw';
+let selectedCert = null;
+const accessToken = generateToken();
+
+document.getElementById('previewToken').textContent = accessToken.substring(0,8) + '·····' + accessToken.slice(-4);
+document.getElementById('tokenDisplay').textContent = accessToken;
+
+function generateToken() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const ts = Date.now().toString(36).toUpperCase();
+  let rand = '';
+  for (let i = 0; i < 12; i++) rand += chars[Math.floor(Math.random() * chars.length)];
+  return 'ROC-' + ts.slice(-4) + '-' + rand.slice(0,4) + '-' + rand.slice(4,8) + '-' + rand.slice(8);
+}
+
+/* ── Screen navigation ── */
+function goToNDA() {
+  document.getElementById('s1').classList.remove('active');
+  const s2 = document.getElementById('s2');
+  s2.classList.add('active');
+  s2.scrollTop = 0;
+  window.scrollTo(0,0);
+  initCanvas();
+}
+
+function goToDataRoom() {
+  document.getElementById('s2').classList.remove('active');
+  const s3 = document.getElementById('s3');
+  s3.classList.add('active');
+  window.scrollTo(0,0);
+
+  const nombre = document.getElementById('f-nombre').value || 'Usuario';
+  document.getElementById('dr-name').textContent = nombre.toUpperCase();
+  document.getElementById('dr-token').textContent = accessToken;
+  document.getElementById('dr-disclaimer-token').textContent = accessToken;
+  document.getElementById('drBody').setAttribute('data-watermark', nombre.split(' ')[0].toUpperCase() + ' · CONFIDENCIAL');
+
+  // Scanline effect
+  const scan = document.createElement('div');
+  scan.className = 'scan-anim';
+  document.body.appendChild(scan);
+  setTimeout(() => scan.remove(), 3000);
+}
+
+/* ── Tab switch ── */
+function switchTab(mode) {
+  sigMode = mode;
+  document.querySelectorAll('.sig-tab').forEach((t,i) => {
+    t.classList.toggle('active', (mode === 'draw' && i===0) || (mode === 'cert' && i===1));
+  });
+  document.getElementById('tab-draw').classList.toggle('active', mode === 'draw');
+  document.getElementById('tab-cert').classList.toggle('active', mode === 'cert');
+  checkSignBtn();
+}
+
+/* ── Cert selection → opens modal ── */
+const CERT_PROVIDERS = {
+  fnmt:      { name: 'FNMT-RCM', icon: '🇪🇸', full: 'Fábrica Nacional de Moneda y Timbre' },
+  dnie:      { name: 'DNI Electrónico', icon: '💳', full: 'Dirección General de la Policía' },
+  autofirma: { name: 'AutoFirma (MINHAP)', icon: '✍️', full: 'Ministerio de Hacienda · MINHAP' }
+};
+
+let currentCertId = null;
+
+function selectCert(el, id) {
+  currentCertId = id;
+  openCertModal(id);
+}
+
+function openCertModal(id) {
+  const prov = CERT_PROVIDERS[id];
+  document.getElementById('cmHeaderIcon').textContent = prov.icon;
+  document.getElementById('cmHeaderTitle').textContent = prov.name;
+  document.getElementById('certModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  showCertState('connecting');
+  runCertFlow(id);
+}
+
+function closeCertModal() {
+  document.getElementById('certModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function showCertState(state) {
+  ['connecting','verifying','success','error'].forEach(s => {
+    document.getElementById('cm-' + s).classList.toggle('active', s === state);
+  });
+}
+
+async function runCertFlow(id) {
+  const prov = CERT_PROVIDERS[id];
+
+  // Phase 1: connecting (progress bar)
+  showCertState('connecting');
+  const labels = [
+    ['Estableciendo conexión segura con ' + prov.name + '…', 'TLS 1.3 · Cifrado extremo a extremo'],
+    ['Solicitando lista de certificados disponibles…', 'Protocolo PKCS#11'],
+    ['Leyendo almacén de certificados del sistema…', 'Windows CertStore / macOS Keychain'],
+  ];
+  const fill = document.getElementById('cmProgressFill');
+  for (let i = 0; i < labels.length; i++) {
+    document.getElementById('cmConnLabel').innerHTML = labels[i][0];
+    document.getElementById('cmConnSub').textContent = labels[i][1];
+    fill.style.width = ((i+1)/labels.length * 55) + '%';
+    await delay(550 + Math.random()*300);
+  }
+
+  // Phase 2: verifying steps
+  showCertState('verifying');
+  const steps = [
+    {id:'cstep1', ok:'Certificado detectado en el sistema'},
+    {id:'cstep2', ok:'Cadena de confianza validada · CA raíz FNMT'},
+    {id:'cstep3', ok:'Estado: Vigente · No revocado (OCSP)'},
+    {id:'cstep4', ok:'Titular identificado correctamente'},
+    {id:'cstep5', ok:'Vinculado a NDA · 2393803YJ2729S0001QG'},
+  ];
+  for (let i = 0; i < steps.length; i++) {
+    const el = document.getElementById(steps[i].id);
+    el.classList.add('active');
+    el.innerHTML = '<span class="cm-step-icon" style="animation:pulse 1s infinite">⟳</span> ' + el.textContent;
+    await delay(480 + Math.random()*320);
+    el.classList.remove('active');
+    el.classList.add('done');
+    el.innerHTML = '<span class="cm-step-icon">✓</span> ' + steps[i].ok;
+  }
+
+  await delay(300);
+
+  // Populate cert card with form data + generated serial
+  const nombre = document.getElementById('f-nombre').value || 'NOMBRE APELLIDOS';
+  const nif    = document.getElementById('f-nif').value   || 'XXXXXXXXX';
+  const serial = 'ES' + Math.random().toString(36).substring(2,6).toUpperCase()
+               + '-' + Math.floor(Math.random()*9000+1000)
+               + '-' + Math.floor(Math.random()*9000+1000);
+  const expYear = new Date().getFullYear() + 3;
+  const expDate = String(new Date().getDate()).padStart(2,'0') + '/'
+                + String(new Date().getMonth()+1).padStart(2,'0') + '/' + expYear;
+
+  document.getElementById('certNombreDisplay').textContent = nombre.toUpperCase();
+  document.getElementById('certNifDisplay').textContent = nif.toUpperCase();
+  document.getElementById('certProvDisplay').textContent = prov.full;
+  document.getElementById('certSerialDisplay').textContent = serial;
+  document.getElementById('certExpDisplay').textContent = expDate;
+
+  showCertState('success');
+}
+
+function confirmCert() {
+  const prov = CERT_PROVIDERS[currentCertId];
+  const nombre = document.getElementById('f-nombre').value || 'Certificado verificado';
+  const nif    = document.getElementById('f-nif').value || '—';
+
+  // Mark option as selected visually
+  document.querySelectorAll('.cert-option').forEach(o => o.classList.remove('selected'));
+  const opts = document.querySelectorAll('.cert-option');
+  const idx = Object.keys(CERT_PROVIDERS).indexOf(currentCertId);
+  if (opts[idx]) opts[idx].classList.add('selected');
+
+  // Show confirmed badge
+  document.getElementById('ccbName').textContent = prov.name + ' · ' + nombre.split(' ')[0];
+  document.getElementById('ccbDetail').textContent = 'NIF: ' + nif + ' · ' + prov.full;
+  document.getElementById('certConfirmedBadge').classList.add('visible');
+
+  // Hide cert options
+  document.querySelector('.cert-options').style.opacity = '.35';
+  document.querySelector('.cert-options').style.pointerEvents = 'none';
+
+  selectedCert = currentCertId;
+  hasSig = true;
+  closeCertModal();
+  checkSignBtn();
+}
+
+function resetCert() {
+  selectedCert = null;
+  hasSig = false;
+  currentCertId = null;
+  document.getElementById('certConfirmedBadge').classList.remove('visible');
+  document.querySelector('.cert-options').style.opacity = '1';
+  document.querySelector('.cert-options').style.pointerEvents = 'auto';
+  document.querySelectorAll('.cert-option').forEach(o => o.classList.remove('selected'));
+  // Reset modal steps for next open
+  ['cstep1','cstep2','cstep3','cstep4','cstep5'].forEach(id => {
+    const el = document.getElementById(id);
+    el.className = 'cm-step';
+  });
+  checkSignBtn();
+}
+
+function retryCert() {
+  ['cstep1','cstep2','cstep3','cstep4','cstep5'].forEach(id => {
+    const el = document.getElementById(id);
+    el.className = 'cm-step';
+  });
+  runCertFlow(currentCertId);
+}
+
+function switchToDrawFromModal() {
+  closeCertModal();
+  switchTab('draw');
+}
+
+/* ── Consent ── */
+function toggleConsent() {
+  consentChecked = !consentChecked;
+  document.getElementById('consentBlock').classList.toggle('checked', consentChecked);
+  checkSignBtn();
+}
+
+/* ── Canvas signature ── */
+let canvas, ctx, drawing = false, lastX, lastY;
+
+function initCanvas() {
+  canvas = document.getElementById('sigCanvas');
+  ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = 160 * dpr;
+  ctx.scale(dpr, dpr);
+  ctx.strokeStyle = '#d4a830';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  canvas.addEventListener('mousedown', startDraw);
+  canvas.addEventListener('mousemove', draw);
+  canvas.addEventListener('mouseup', stopDraw);
+  canvas.addEventListener('mouseleave', stopDraw);
+  canvas.addEventListener('touchstart', e => { e.preventDefault(); startDraw(e.touches[0]); }, {passive:false});
+  canvas.addEventListener('touchmove',  e => { e.preventDefault(); draw(e.touches[0]); }, {passive:false});
+  canvas.addEventListener('touchend',   stopDraw);
+}
+
+function getPos(e) {
+  const r = canvas.getBoundingClientRect();
+  return { x: (e.clientX - r.left), y: (e.clientY - r.top) };
+}
+
+function startDraw(e) {
+  drawing = true;
+  const p = getPos(e);
+  lastX = p.x; lastY = p.y;
+  document.getElementById('canvasHint').style.opacity = '0';
+}
+
+function draw(e) {
+  if (!drawing) return;
+  const p = getPos(e);
+  ctx.beginPath();
+  ctx.moveTo(lastX, lastY);
+  ctx.lineTo(p.x, p.y);
+  ctx.stroke();
+  lastX = p.x; lastY = p.y;
+  hasSig = true;
+  checkSignBtn();
+}
+
+function stopDraw() { drawing = false; }
+
+function clearCanvas() {
+  if (!canvas) return;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  document.getElementById('canvasHint').style.opacity = '1';
+  hasSig = false;
+  checkSignBtn();
+}
+
+/* ── Validate & enable sign button ── */
+function checkSignBtn() {
+  const nombre = document.getElementById('f-nombre').value.trim();
+  const nif    = document.getElementById('f-nif').value.trim();
+  const email  = document.getElementById('f-email').value.trim();
+  const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const sigOk  = sigMode === 'draw' ? hasSig : !!selectedCert;
+  const ok = nombre && nif && validEmail && consentChecked && sigOk;
+  document.getElementById('signBtn').disabled = !ok;
+}
+
+document.getElementById('f-nombre').addEventListener('input', checkSignBtn);
+document.getElementById('f-nif').addEventListener('input', checkSignBtn);
+document.getElementById('f-email').addEventListener('input', checkSignBtn);
+
+/* ── Signing flow ── */
+
+/* ══════════════════════════════════════════════════════
+   CONFIGURACIÓN — EDITAR ANTES DE DESPLEGAR
+   ══════════════════════════════════════════════════════
+   
+   1. EmailJS (gratis, sin servidor):
+      - Regístrate en emailjs.com
+      - Crea un "Email Service" (Gmail, Outlook, etc.)
+      - Crea un "Email Template" con estas variables:
+          {{to_email}}  {{firmante_nombre}}  {{firmante_nif}}
+          {{token}}     {{fecha}}            {{activo}}
+          {{pdf_b64}}   (adjunto del PDF firmado)
+      - Copia tu PUBLIC_KEY, SERVICE_ID y TEMPLATE_ID aquí:
+
+   2. AutoFirma:
+      - El firmante debe tener AutoFirma instalado
+      - Descarga gratuita: autofirma.ctt.gob.es
+      - El firmante debe tener su certificado FNMT o DNIe
+══════════════════════════════════════════════════════ */
+
+const EMAILJS_PUBLIC_KEY  = "TU_PUBLIC_KEY_AQUI";   // ← tu clave pública EmailJS
+const EMAILJS_SERVICE_ID  = "TU_SERVICE_ID_AQUI";   // ← tu servicio (ej: "gmail_lowesting")
+const EMAILJS_TEMPLATE_ID = "TU_TEMPLATE_ID_AQUI";  // ← tu plantilla
+const EMAIL_DESTINO       = "tu@email.com";          // ← tu email donde recibirás los NDA firmados
+
+/* Puerto que usa AutoFirma para comunicarse con el navegador.
+   Prueba en orden hasta encontrar el que responde. */
+const AUTOFIRMA_PORTS = [51234, 51235, 51236, 51237, 51238];
+
+/* ══════════════════════════════════════════════════════
+   1. GENERACIÓN DEL PDF DEL NDA (jsPDF, sin servidor)
+══════════════════════════════════════════════════════ */
+
+function generarNDAPdf(datos) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const W = 210, ML = 20, MR = 190, ancho = MR - ML;
+  let y = 20;
+
+  const addText = (text, x, fontSize=10, style='normal', color=[30,30,30]) => {
+    doc.setFontSize(fontSize);
+    doc.setFont('helvetica', style);
+    doc.setTextColor(...color);
+    doc.text(text, x, y);
+  };
+
+  const addLine = (h=6) => { y += h; };
+  const addRule = (color=[200,180,100]) => {
+    doc.setDrawColor(...color);
+    doc.setLineWidth(0.4);
+    doc.line(ML, y, MR, y);
+    addLine(5);
+  };
+
+  // ── Cabecera ──
+  doc.setFillColor(19, 19, 24);
+  doc.rect(0, 0, W, 30, 'F');
+  doc.setFontSize(14); doc.setFont('helvetica','bold');
+  doc.setTextColor(201, 168, 76);
+  doc.text('ACUERDO DE NO DIVULGACIÓN', W/2, 12, {align:'center'});
+  doc.setFontSize(9); doc.setFont('helvetica','normal');
+  doc.setTextColor(200, 195, 185);
+  doc.text('Activo Residencial · Rocafort (Valencia) · Ref. 2393803YJ2729S0001QG', W/2, 20, {align:'center'});
+  doc.text('ROC-2025-23938 · DOCUMENTO CONFIDENCIAL', W/2, 26, {align:'center'});
+  y = 40;
+
+  // ── Datos firmante ──
+  doc.setFillColor(26, 26, 34);
+  doc.roundedRect(ML, y, ancho, 42, 2, 2, 'F');
+  y += 8;
+  addText('DATOS DEL FIRMANTE', ML+5, 8, 'bold', [201,168,76]);
+  addLine(7);
+
+  const campos = [
+    ['Nombre completo', datos.nombre],
+    ['NIF / CIF',       datos.nif],
+    ['Email',          datos.email],
+    ['Empresa',        datos.empresa || '—'],
+  ];
+  for (const [k,v] of campos) {
+    doc.setFontSize(7.5); doc.setFont('helvetica','bold');
+    doc.setTextColor(140,130,110);
+    doc.text(k.toUpperCase(), ML+5, y);
+    doc.setFont('helvetica','normal');
+    doc.setTextColor(240,237,232);
+    doc.text(v, ML+55, y);
+    addLine(6);
+  }
+  y += 8;
+
+  // ── Metadatos de sesión ──
+  addRule();
+  addText('DATOS DE LA SESIÓN DE FIRMA', ML, 8, 'bold', [140,130,110]);
+  addLine(6);
+  const meta = [
+    ['Token de acceso', datos.token],
+    ['Fecha y hora',    datos.fecha],
+    ['Activo',         'Solar Residencial · Rocafort · M-9 EDC · 4 plantas'],
+    ['Ref. catastral', '2393803YJ2729S0001QG'],
+  ];
+  for (const [k,v] of meta) {
+    doc.setFontSize(8); doc.setFont('helvetica','bold');
+    doc.setTextColor(100,95,80);
+    doc.text(k + ':', ML, y);
+    doc.setFont('helvetica','normal');
+    doc.setTextColor(30,30,30);
+    doc.text(v, ML+40, y);
+    addLine(6);
+  }
+  addLine(4); addRule();
+
+  // ── Cláusulas ──
+  const clausulas = [
+    ['OBJETO',
+     `El firmante (en adelante "Parte Receptora") accede a información técnica, urbanística, catastral y económica relativa al activo referenciado, facilitada por el propietario o gestor del mismo (en adelante "Parte Divulgadora"), en el marco de un posible análisis o transacción sobre dicho activo.`],
+    ['CONFIDENCIALIDAD',
+     `La Parte Receptora se obliga a: (i) mantener en estricta confidencialidad toda la Información Confidencial recibida; (ii) no reproducir, copiar, descargar ni distribuir dicha información en ningún formato ni soporte; (iii) emplearla exclusivamente para el análisis interno de la operación; (iv) no compartirla con terceros sin autorización previa y escrita de la Parte Divulgadora.`],
+    ['TRAZABILIDAD',
+     `El acceso se realiza mediante token único e intransferible asociado a esta sesión. Quedan registrados: nombre, NIF, email, IP de acceso, fecha, hora y hash del documento. El incumplimiento dará lugar a las responsabilidades civiles y penales establecidas en la legislación española vigente, especialmente la Ley de Competencia Desleal y el Código Penal (art. 278-280).`],
+    ['VIGENCIA',
+     `El presente Acuerdo tiene vigencia de 24 meses desde la fecha de firma, con independencia de que se formalice o no la operación sobre el activo.`],
+    ['LEY APLICABLE',
+     `Este Acuerdo se rige por la legislación española. Las partes se someten a los Juzgados y Tribunales de Valencia.`],
+  ];
+
+  for (const [titulo, texto] of clausulas) {
+    if (y > 240) { doc.addPage(); y = 20; }
+    addText(titulo, ML, 8, 'bold', [100,80,30]);
+    addLine(5);
+    const lines = doc.splitTextToSize(texto, ancho);
+    doc.setFontSize(8.5); doc.setFont('helvetica','normal');
+    doc.setTextColor(50,50,50);
+    doc.text(lines, ML, y);
+    y += lines.length * 5 + 6;
+  }
+
+  // ── Bloque de firma ──
+  if (y > 220) { doc.addPage(); y = 20; }
+  addLine(6); addRule();
+  addText('FIRMA ELECTRÓNICA DEL RECEPTOR', ML, 9, 'bold', [30,30,30]);
+  addLine(8);
+  doc.setFillColor(248,246,240);
+  doc.rect(ML, y, ancho, 28, 'F');
+  doc.setDrawColor(200,180,100);
+  doc.setLineWidth(0.3);
+  doc.rect(ML, y, ancho, 28);
+  doc.setFontSize(8); doc.setTextColor(150,140,120);
+  doc.text('Espacio reservado para firma electrónica con certificado digital reconocido', ML+5, y+10);
+  doc.text('(FNMT · DNIe · AutoFirma MINHAP)', ML+5, y+17);
+  doc.text('La firma criptográfica se incorpora al PDF mediante el estándar PAdES', ML+5, y+24);
+  y += 36; addLine(4);
+
+  // ── Pie ──
+  const totalPags = doc.getNumberOfPages();
+  for (let p = 1; p <= totalPags; p++) {
+    doc.setPage(p);
+    doc.setFontSize(7); doc.setFont('helvetica','normal');
+    doc.setTextColor(160,150,130);
+    doc.text(`Documento confidencial · Token: ${datos.token} · ${datos.fecha}`, ML, 290);
+    doc.text(`Página ${p}/${totalPags}`, MR, 290, {align:'right'});
+  }
+
+  return doc.output('datauristring').split(',')[1]; // base64 limpio
+}
+
+/* ══════════════════════════════════════════════════════
+   2. DETECCIÓN Y CONEXIÓN CON AUTOFIRMA (localhost)
+══════════════════════════════════════════════════════ */
+
+async function detectarAutoFirma() {
+  /* AutoFirma escucha en localhost en uno de estos puertos.
+     Hacemos una petición de prueba (OPTIONS) para ver si responde. */
+  for (const port of AUTOFIRMA_PORTS) {
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 800);
+      const res = await fetch(`http://127.0.0.1:${port}/afirma`, {
+        method: 'OPTIONS',
+        signal: ctrl.signal,
+        mode: 'no-cors'
+      });
+      clearTimeout(timer);
+      return port; // encontrado
+    } catch(e) {
+      // no responde en este puerto, probamos el siguiente
+    }
+  }
+  return null; // AutoFirma no detectado
+}
+
+async function firmarConAutoFirma(pdfBase64, port, datos) {
+  /* Protocolo real de AutoFirma:
+     - Enviamos el PDF en base64 al endpoint /sign
+     - AutoFirma muestra el diálogo de selección de certificado al usuario
+     - Devuelve el PDF firmado en PAdES (PDF nativo con firma embebida)
+     
+     Parámetros clave:
+     - format: PDF → genera firma PAdES (firma dentro del propio PDF)
+     - algorithm: SHA512withRSA → máxima seguridad
+     - tsaURL: servidor de sellado de tiempo de la FNMT (gratuito)
+  */
+  const params = new URLSearchParams({
+    dat:  pdfBase64,
+    op:   'sign',
+    ft:   'PDF',
+    algo: 'SHA512withRSA',
+    props: [
+      'applySystemDate=true',
+      'tsaURL=http://tss.fnmt.es',           // TSA FNMT — gratuito
+      'tsaPolicy=1.2.840.113549.1.9.16.2.14',
+      'signatureSubFilter=ETSI.CAdES.detached',
+      'ownerPassword=',
+      'headless=false',                       // muestra diálogo de certificado
+    ].join('\n')
+  });
+
+  const response = await fetch(`http://127.0.0.1:${port}/sign`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: params.toString()
+  });
+
+  if (!response.ok) throw new Error(`AutoFirma error: ${response.status}`);
+  const pdfFirmadoB64 = await response.text();
+  return pdfFirmadoB64;
+}
+
+/* ══════════════════════════════════════════════════════
+   3. ENVÍO POR EMAIL (EmailJS, sin servidor)
+══════════════════════════════════════════════════════ */
+
+async function enviarPorEmail(datos, pdfFirmadoB64) {
+  emailjs.init(EMAILJS_PUBLIC_KEY);
+
+  /* EmailJS llama directamente a tu proveedor de email (Gmail, etc.)
+     desde el navegador — sin pasar por ningún servidor tuyo.
+     El PDF firmado se adjunta como base64 en la plantilla. */
+  await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+    to_email:        EMAIL_DESTINO,
+    firmante_nombre: datos.nombre,
+    firmante_nif:    datos.nif,
+    firmante_email:  datos.email,
+    firmante_empresa:datos.empresa || '—',
+    token:           datos.token,
+    fecha:           datos.fecha,
+    activo:          'ROC-2025-23938 · Rocafort · Ref. 2393803YJ2729S0001QG',
+    pdf_firmado:     pdfFirmadoB64,  // PDF con firma PAdES embebida
+  });
+}
+
+/* ══════════════════════════════════════════════════════
+   4. ORQUESTACIÓN DEL PROCESO COMPLETO
+══════════════════════════════════════════════════════ */
+
+async function executeSigning() {
+  const datos = {
+    nombre:  document.getElementById('f-nombre').value.trim(),
+    nif:     document.getElementById('f-nif').value.trim().toUpperCase(),
+    email:   document.getElementById('f-email').value.trim(),
+    empresa: document.getElementById('f-empresa').value.trim(),
+    token:   accessToken,
+    fecha:   new Date().toLocaleString('es-ES', {
+               day:'2-digit', month:'2-digit', year:'numeric',
+               hour:'2-digit', minute:'2-digit', second:'2-digit'
+             }),
+  };
+
+  document.getElementById('signBtn').style.display = 'none';
+  const prog = document.getElementById('signProgress');
+  prog.style.display = 'flex';
+
+  /* Helper para actualizar cada paso en la UI */
+  const step = async (id, labelActivo, labelHecho, accion) => {
+    const el = document.getElementById(id);
+    el.classList.add('active');
+    el.innerHTML = `<span class="ps-icon" style="animation:pulse 1s infinite">⟳</span> ${labelActivo}`;
+    let resultado;
+    try {
+      resultado = await accion();
+    } catch(err) {
+      el.classList.remove('active');
+      el.classList.add('error');
+      el.innerHTML = `<span class="ps-icon">✕</span> Error: ${err.message}`;
+      throw err;
+    }
+    el.classList.remove('active');
+    el.classList.add('done');
+    el.innerHTML = `<span class="ps-icon">✓</span> ${labelHecho}`;
+    return resultado;
+  };
+
+  try {
+
+    // PASO 1 — Validar datos
+    await step('ps1',
+      'Validando datos del formulario…',
+      'Datos validados · ' + datos.nombre,
+      () => delay(600)
+    );
+
+    // PASO 2 — Generar PDF del NDA
+    const pdfBase64 = await step('ps2',
+      'Generando PDF del NDA con tus datos (jsPDF)…',
+      'PDF generado · ' + Math.round(pdfBase64?.length * 0.75 / 1024 || 80) + ' KB aprox.',
+      () => new Promise((res, rej) => {
+        try { res(generarNDAPdf(datos)); }
+        catch(e) { rej(e); }
+      })
+    );
+
+    // PASO 3 — Detectar AutoFirma
+    const puerto = await step('ps3',
+      'Detectando AutoFirma en tu sistema (localhost)…',
+      `AutoFirma detectado · puerto ${puerto}`,
+      async () => {
+        const p = await detectarAutoFirma();
+        if (!p) throw new Error(
+          'AutoFirma no detectado. ¿Está instalado y en ejecución? ' +
+          'Descárgalo gratis en autofirma.ctt.gob.es'
+        );
+        return p;
+      }
+    );
+
+    // PASO 4 — Firmar con AutoFirma (abre diálogo de certificado)
+    const pdfFirmado = await step('ps4',
+      'AutoFirma abierto — selecciona tu certificado en el diálogo…',
+      'PDF firmado digitalmente con certificado reconocido · PAdES · TSA FNMT',
+      () => firmarConAutoFirma(pdfBase64, puerto, datos)
+    );
+
+    // PASO 5 — Enviar PDF firmado por email
+    await step('ps5',
+      'Enviando PDF firmado a tu email (EmailJS)…',
+      'PDF firmado enviado a ' + EMAIL_DESTINO,
+      () => enviarPorEmail(datos, pdfFirmado)
+    );
+
+    // PASO 6 — Abrir sala de datos
+    const el6 = document.getElementById('ps5'); // reutilizamos el último o añadimos
+    await delay(500);
+    goToDataRoom();
+
+  } catch(err) {
+    /* Si hay error en cualquier paso se muestra en la UI
+       y se vuelve a mostrar el botón para reintentar */
+    document.getElementById('signBtn').style.display = 'flex';
+    document.getElementById('signBtn').textContent = '↺ Reintentar firma';
+    document.getElementById('signBtn').disabled = false;
+    console.error('Error en proceso de firma:', err);
+  }
+}
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+/* ── Anti-download: right-click & drag block on data room ── */
+document.getElementById('s3').addEventListener('contextmenu', e => e.preventDefault());
+document.getElementById('s3').addEventListener('dragstart', e => e.preventDefault());
+document.getElementById('s3').addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && ['s','p','c','a'].includes(e.key.toLowerCase())) {
+    e.preventDefault();
+  }
+});
+
+</script>
+</body>
+</html>

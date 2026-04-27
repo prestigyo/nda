@@ -9,12 +9,22 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <!-- EmailJS: envia el PDF firmado a tu email sin servidor -->
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<!-- AutoFirma: protocolo directo HTTPS localhost (v4)
-     AutoFirma levanta un servidor HTTPS local en el PC del firmante.
-     La librería oficial del MINHAP no está disponible en CDN,
-     por lo que usamos el protocolo directo documentado.
-     El firmante DEBE tener AutoFirma instalado y en ejecución.
+<!--
+  ╔══════════════════════════════════════════════════════════╗
+  ║  AUTOSCRIPT v1.9 — ARCHIVO REQUERIDO (v6)               ║
+  ║                                                          ║
+  ║  Descarga autoscript.js del Portal de Administración     ║
+  ║  Electrónica y súbelo a tu GitHub junto al index.html   ║
+  ║                                                          ║
+  ║  Descarga (53 KB ZIP):                                   ║
+  ║  administracionelectronica.gob.es/ctt/                   ║
+  ║  clienteafirma/descargas                                 ║
+  ║  → sección "AutoScript v1.9"                            ║
+  ║                                                          ║
+  ║  Descomprime el ZIP → sube autoscript.js a GitHub       ║
+  ╚══════════════════════════════════════════════════════════╝
 -->
+<script src="autoscript.js" onerror="window._AF_ERROR=true"></script>
 <style>
 /* ═══════════════════════════════════════════════
    GLOBALS
@@ -1388,7 +1398,7 @@ canvas#sigCanvas {
             <span>→</span>
           </button>
           <div class="s1-footer" style="margin-top:16px">
-            Activo ref. ROC-2025-23938 · v4 · Gestión exclusiva · Información sujeta a NDA
+            Activo ref. ROC-2025-23938 · v6 · Gestión exclusiva · Información sujeta a NDA
           </div>
         </div>
       </div>
@@ -1404,7 +1414,7 @@ canvas#sigCanvas {
 
   <div class="nda-header">
     <div class="nda-logo">Lowesting<span>·</span>Access</div>
-    <div class="version-badge">Activo v4</div>
+    <div class="version-badge">Activo v6</div>
     <div class="nda-status">
       <div class="status-dot"></div>
       Sesión segura · Activo ROC-2025-23938
@@ -1448,17 +1458,16 @@ canvas#sigCanvas {
     </div>
 
     <!-- FORM -->
-    <h2 class="nda-form-title">Sus datos identificativos</h2>
-    <p class="nda-form-sub">Cumplimente el siguiente formulario. Sus datos quedan vinculados al token de acceso y al documento firmado.</p>
+    <h2 class="nda-form-title">Datos de contacto</h2>
+    <p class="nda-form-sub">
+      El certificado digital ya contiene su nombre, apellidos y NIF — no es necesario repetirlos.
+      Indique únicamente su email de contacto y, opcionalmente, su empresa y cargo.
+    </p>
 
     <div class="form-grid">
-      <div class="field">
-        <label>Nombre completo *</label>
-        <input type="text" id="f-nombre" placeholder="Juan García López" required>
-      </div>
-      <div class="field">
-        <label>NIF / CIF *</label>
-        <input type="text" id="f-nif" placeholder="12345678A" required>
+      <div class="field form-full">
+        <label>Email profesional *</label>
+        <input type="email" id="f-email" placeholder="juan.garcia@empresa.com" required>
       </div>
       <div class="field">
         <label>Entidad / Empresa</label>
@@ -1468,11 +1477,10 @@ canvas#sigCanvas {
         <label>Cargo</label>
         <input type="text" id="f-cargo" placeholder="Director de Inversiones">
       </div>
-      <div class="field form-full">
-        <label>Email profesional *</label>
-        <input type="email" id="f-email" placeholder="juan.garcia@empresa.com" required>
-      </div>
     </div>
+    <!-- Campos ocultos: se rellenan automáticamente desde el certificado tras la firma -->
+    <input type="hidden" id="f-nombre" value="">
+    <input type="hidden" id="f-nif"    value="">
 
     <!-- Signature — solo certificado digital reconocido -->
     <div class="sig-area">
@@ -1577,7 +1585,7 @@ canvas#sigCanvas {
 
   <div class="dr-header">
     <div class="dr-logo">Lowesting<span>·</span>DataRoom</div>
-    <div class="version-badge">Activo v4</div>
+    <div class="version-badge">Activo v6</div>
     <div class="dr-access-bar">
       <div class="dr-access-info">
         <div class="dr-access-name" id="dr-name">—</div>
@@ -2142,20 +2150,17 @@ function clearCanvas() {
 
 /* ── Validate & enable sign button ── */
 function checkSignBtn() {
-  const nombre = document.getElementById('f-nombre').value.trim();
-  const nif    = document.getElementById('f-nif').value.trim();
-  const email  = document.getElementById('f-email').value.trim();
+  const email = document.getElementById('f-email').value.trim();
   const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const ok = nombre && nif && validEmail && consentChecked && !!selectedCert;
+  const ok = validEmail && consentChecked && !!selectedCert;
   document.getElementById('signBtn').disabled = !ok;
-  // Mostrar aviso AutoFirma cuando todo está listo excepto la firma final
   const aviso = document.getElementById('autofirmaAviso');
-  if (aviso) aviso.style.display = (nombre && nif && validEmail && selectedCert) ? 'block' : 'none';
+  if (aviso) aviso.style.display = (validEmail && selectedCert) ? 'block' : 'none';
 }
 
-document.getElementById('f-nombre').addEventListener('input', checkSignBtn);
-document.getElementById('f-nif').addEventListener('input', checkSignBtn);
 document.getElementById('f-email').addEventListener('input', checkSignBtn);
+
+
 
 /* ── Signing flow ── */
 
@@ -2198,7 +2203,7 @@ const EMAIL_DESTINO       = "tu@email.com";          // ← tu email donde recib
       La librería detecta si AutoFirma está instalado, lanza el servidor
       si no está corriendo, y gestiona toda la comunicación.
    
-   3. El método AutoFirmaConnector.sign() es el que abre el diálogo
+   3. El método AutoScript.sign() es el que abre el diálogo
       nativo del SO para seleccionar el certificado. Un fetch manual
       a localhost:puerto nunca abre ese diálogo — solo la librería lo hace.
    
@@ -2349,143 +2354,107 @@ function generarNDAPdf(datos) {
 ══════════════════════════════════════════════════════ */
 
 /* ══════════════════════════════════════════════════════
-   AUTOFIRMA — Protocolo real de comunicación (v4)
+   AUTOSCRIPT v1.9 — Librería oficial MINHAP (AutoScript.sign)
    ══════════════════════════════════════════════════════
    
-   AutoFirma instala en el PC del usuario:
-   - Una app de escritorio
-   - Un servidor HTTPS local (puertos 51234-51238)
-   - Un certificado SSL autofirmado registrado en el SO
-   
-   La web llama a ese servidor HTTPS local.
-   AutoFirma detecta la petición y abre el diálogo nativo
-   de selección de certificados del sistema operativo.
-   
-   Problema conocido con HTTPS → HTTPS localhost:
-   Algunos navegadores bloquean la primera petición porque
-   el certificado de AutoFirma es autofirmado.
-   Solución: abrimos primero una ventana de "aceptación"
-   al servidor de AutoFirma para que el usuario acepte
-   el certificado una vez. Después la petición de firma funciona.
+   AutoScript.sign() es el método oficial.
+   Internamente:
+   1. Detecta si AutoFirma está instalado
+   2. Si no → redirige a descarga en autofirma.ctt.gob.es
+   3. Si sí → abre diálogo nativo de certificados del SO
+   4. El usuario elige su cert (FNMT, DNIe, etc.)
+   5. AutoFirma firma el PDF localmente con PAdES
+   6. La clave privada NUNCA sale del PC del usuario
+   7. Devuelve el PDF firmado en base64
+
+   Los datos del firmante (nombre, NIF) se extraen
+   automáticamente del certificado elegido.
 ══════════════════════════════════════════════════════ */
 
 const AF_PORTS = [51234, 51235, 51236, 51237, 51238];
 let AF_PORT_ACTIVO = null;
 
+function autoFirmaDisponible() {
+  /* autoscript.js define window.AutoScript */
+  if (window._AF_ERROR) return false;
+  return typeof window.AutoScript !== 'undefined';
+}
+
 async function detectarAutoFirma() {
-  /* Prueba cada puerto hasta encontrar el servidor HTTPS de AutoFirma.
-     Usa fetch con mode:'no-cors' para evitar el bloqueo CORS en la detección.
-     Una respuesta (aunque sea opaca) confirma que AutoFirma está escuchando. */
-  for (const port of AF_PORTS) {
-    try {
-      const ctrl = new AbortController();
-      setTimeout(() => ctrl.abort(), 1200);
-      await fetch(`https://127.0.0.1:${port}/afirma`, {
-        method: 'GET',
-        mode: 'no-cors',
-        signal: ctrl.signal,
-      });
-      AF_PORT_ACTIVO = port;
-      return port;
-    } catch(e) {
-      // Este puerto no responde, probamos el siguiente
-    }
-  }
-  throw new Error(
-    'AutoFirma no detectado en el equipo. ' +
-    'Asegúrate de que AutoFirma está instalado y en ejecución. ' +
-    'Descarga gratuita en autofirma.ctt.gob.es'
-  );
-}
-
-async function aceptarCertificadoAutoFirma(port) {
-  /* AutoFirma usa un certificado SSL autofirmado.
-     El navegador lo bloquea la primera vez.
-     Abrimos una ventana temporal para que el usuario lo acepte
-     (igual que hace la web oficial del MINHAP). */
-  return new Promise((resolve) => {
-    const url = `https://127.0.0.1:${port}/afirma`;
-    const win = window.open(url, '_af_cert',
-      'width=400,height=300,menubar=no,toolbar=no,status=no'
+  if (!autoFirmaDisponible()) {
+    throw new Error(
+      'El archivo autoscript.js no se encontró. ' +
+      'Descárgalo de administracionelectronica.gob.es/ctt/clienteafirma/descargas ' +
+      '(AutoScript v1.9) y súbelo a tu repositorio de GitHub junto al index.html.'
     );
-    // Damos 3 segundos para que el usuario acepte el certificado
-    // Si ya lo tenía aceptado, la ventana se cierra sola antes
-    setTimeout(() => {
-      try { win && win.close(); } catch(e) {}
-      resolve();
-    }, 3000);
-  });
+  }
+  /* Preparar AutoScript para la comunicación con AutoFirma */
+  AutoScript.cargarAppAfirma();
+  return true;
 }
 
-function firmarConAutoFirma(pdfBase64, port, datos) {
-  /* Protocolo HTTP real de AutoFirma:
-     POST https://127.0.0.1:PORT/sign/
-     
-     AutoFirma recibe la petición y:
-     1. Abre el diálogo nativo del SO para seleccionar certificado
-     2. El usuario elige su certificado (FNMT, DNIe, etc.)
-     3. AutoFirma firma el PDF localmente con PAdES
-     4. Devuelve el PDF firmado en base64
-     
-     La clave privada del certificado NUNCA abandona el PC.
-  */
-  return new Promise(async (resolve, reject) => {
-    try {
-      const p = port || AF_PORT_ACTIVO;
-      if (!p) throw new Error('Puerto AutoFirma no determinado');
+function firmarConAutoFirma(pdfBase64, _p, datos) {
+  return new Promise((resolve, reject) => {
 
-      const props = [
+    /* Tras la firma exitosa, AutoFirma devuelve también el certificado
+       del firmante. Extraemos nombre y NIF de él para el registro. */
+    function extraerDatosCert(certB64) {
+      // AutoScript devuelve el cert en base64 X.509
+      // En producción se parsea con una librería PKI
+      // Aquí guardamos el cert raw para el email
+      return { certB64 };
+    }
+
+    /* AutoScript.sign() — API oficial del MINHAP
+       Abre AutoFirma → diálogo de certificados del SO
+       El usuario selecciona su cert (FNMT, DNIe, etc.)
+       AutoFirma firma el PDF localmente con PAdES
+       La clave privada nunca abandona el PC del usuario */
+    AutoScript.sign(
+      pdfBase64,          // datos a firmar en base64
+      'SHA512withRSA',    // algoritmo de firma
+      'PDF',              // formato PAdES (firma dentro del PDF)
+      [                   // propiedades extra
         'applySystemDate=true',
         'tsaURL=http://tss.fnmt.es',
         'tsaPolicy=1.2.840.113549.1.9.16.2.14',
         'signatureSubFilter=adbe.pkcs7.detached',
-      ].join('\n');
+        'includeSigningCertificateV2=true',
+      ].join('\n'),
 
-      // Construimos el body según el protocolo de AutoFirma
-      const body = new URLSearchParams();
-      body.append('dat',   pdfBase64);
-      body.append('op',    'sign');
-      body.append('ft',    'PDF');
-      body.append('algo',  'SHA512withRSA');
-      body.append('props', props);
+      /* successCallback(firmadoB64, certB64) */
+      function(pdfFirmadoB64, certB64) {
+        /* AutoScript devuelve el PDF firmado y el certificado X.509.
+           Extraemos nombre y NIF del certificado automáticamente. */
+        try {
+          if (certB64) {
+            /* AutoScript expone AutoScript.getCertificateProperty()
+               para extraer campos del certificado */
+            const cn = AutoScript.getCertificateProperty(certB64, 'CN');
+            const sn = AutoScript.getCertificateProperty(certB64, 'SERIALNUMBER');
+            datos.nombre  = cn || 'Firmante (cert digital)';
+            datos.nif     = sn || '—';
+            datos.certB64 = certB64;
+            document.getElementById('f-nombre').value = datos.nombre;
+            document.getElementById('f-nif').value    = datos.nif;
+          }
+        } catch(e) { /* continuar aunque falle extracción */ }
+        resolve(pdfFirmadoB64);
+      },
 
-      const response = await fetch(`https://127.0.0.1:${p}/sign/`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body:    body.toString(),
-        // Sin timeout — el usuario puede tardar en seleccionar su certificado
-      });
-
-      if (!response.ok) {
-        throw new Error(`AutoFirma respondió con error HTTP ${response.status}`);
+      /* errorCallback(type, message) */
+      function(errorType, errorMessage) {
+        const msgs = {
+          'SAF_01': 'Error interno de AutoFirma.',
+          'SAF_02': 'AutoFirma no está instalado. Descárgalo en firmaelectronica.gob.es',
+          'SAF_03': 'Firma cancelada por el usuario.',
+          'SAF_04': 'Versión de AutoFirma desactualizada. Instala la v1.9.',
+          'SAF_05': 'Error de acceso al almacén de certificados.',
+        };
+        reject(new Error(msgs[errorType] ||
+          `Error AutoFirma (${errorType}): ${errorMessage}`));
       }
-
-      const resultado = await response.text();
-
-      // AutoFirma devuelve 'ERR-XX' si hubo un error
-      if (resultado.startsWith('ERR-')) {
-        const codigo = resultado.trim();
-        if (codigo === 'ERR-27') throw new Error('Firma cancelada por el usuario.');
-        if (codigo === 'ERR-52') throw new Error('No se pudo acceder al almacén de certificados.');
-        throw new Error(`AutoFirma devolvió ${codigo}`);
-      }
-
-      // Si llegamos aquí, resultado es el PDF firmado en base64
-      resolve(resultado);
-
-    } catch(err) {
-      // Si es un error de red (CORS, cert no aceptado), lo explicamos
-      if (err.name === 'TypeError' && err.message.includes('fetch')) {
-        reject(new Error(
-          'El navegador bloqueó la conexión con AutoFirma. ' +
-          'Es posible que necesites aceptar el certificado de AutoFirma. ' +
-          'Abre https://127.0.0.1:51234/afirma en una pestaña, acepta el ' +
-          'certificado y vuelve a intentarlo.'
-        ));
-      } else {
-        reject(err);
-      }
-    }
+    );
   });
 }
 
@@ -2518,10 +2487,11 @@ async function enviarPorEmail(datos, pdfFirmadoB64) {
 
 async function executeSigning() {
   const datos = {
-    nombre:  document.getElementById('f-nombre').value.trim(),
-    nif:     document.getElementById('f-nif').value.trim().toUpperCase(),
+    nombre:  '(del certificado)',   // se actualiza tras la firma desde el cert X.509
+    nif:     '(del certificado)',
     email:   document.getElementById('f-email').value.trim(),
     empresa: document.getElementById('f-empresa').value.trim(),
+    cargo:   document.getElementById('f-cargo') ? document.getElementById('f-cargo').value.trim() : '',
     token:   accessToken,
     fecha:   new Date().toLocaleString('es-ES', {
                day:'2-digit', month:'2-digit', year:'numeric',
@@ -2558,7 +2528,7 @@ async function executeSigning() {
     // PASO 1 — Validar datos
     await step('ps1',
       'Validando datos del formulario…',
-      'Datos validados · ' + datos.nombre,
+      'Datos validados · ' + datos.email,
       () => delay(600)
     );
 
@@ -2574,8 +2544,8 @@ async function executeSigning() {
 
     // PASO 3 — Detectar AutoFirma en el sistema
     const puerto = await step('ps3',
-      'Localizando AutoFirma en el sistema (puertos 51234-51238)…',
-      'AutoFirma detectado y respondiendo en localhost',
+      'Verificando librería AutoFirma (MINHAP)…',
+      'AutoScript v1.9 disponible — listo para firmar',
       () => detectarAutoFirma()
     );
 

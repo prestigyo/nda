@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Test AutoFirma v2</title>
+<script src="https://cdn.jsdelivr.net/npm/@doncicuto/autoscript@1.1.1/autoscript.js" onerror="window._AF_LOAD_ERROR=true"></script>
+<style>
+  body { font-family: sans-serif; padding: 40px; background: #1a1a1a; color: #fff; max-width: 700px; }
+  h2   { color: #c9a84c; margin-bottom: 8px; }
+  p    { color: #aaa; margin-bottom: 24px; font-size: 14px; }
+  .btn {
+    display: block; width: 100%;
+    padding: 18px; font-size: 16px; font-weight: bold;
+    background: #c9a84c; color: #000; border: none;
+    cursor: pointer; border-radius: 4px; margin-bottom: 10px;
+    text-align: left; padding-left: 24px;
+  }
+  .btn:hover { background: #e8c96e; }
+  .btn b { font-size: 20px; margin-right: 10px; }
+  #log {
+    margin-top: 20px; background: #111; padding: 20px;
+    border-radius: 4px; font-family: monospace; font-size: 13px;
+    min-height: 80px; white-space: pre-wrap; color: #0f0;
+    border: 1px solid #333;
+  }
+  .ok  { color: #0f0; }
+  .err { color: #f55; }
+  .inf { color: #fc0; }
+</style>
+</head>
+<body>
+
+<h2>Test AutoFirma — v2</h2>
+<p>autoscript.js cargado desde CDN (jsDelivr · npm @doncicuto/autoscript v1.1.1)</p>
+
+<button class="btn" onclick="testCargar()">
+  <b>1</b> Cargar AutoFirma
+  <span style="font-size:13px;font-weight:normal;display:block;padding-left:30px;color:#333">
+    Llama a cargarAppAfirma() — el navegador debe preguntar si abrir AutoFirma
+  </span>
+</button>
+
+<button class="btn" onclick="testCertificado()">
+  <b>2</b> Seleccionar certificado
+  <span style="font-size:13px;font-weight:normal;display:block;padding-left:30px;color:#333">
+    Llama a selectCertificate() — debe abrir el diálogo de certificados
+  </span>
+</button>
+
+<button class="btn" onclick="testFirmar()">
+  <b>3</b> Firmar texto de prueba
+  <span style="font-size:13px;font-weight:normal;display:block;padding-left:30px;color:#333">
+    Firma un texto simple con tu certificado (formato CAdES)
+  </span>
+</button>
+
+<div id="log">Esperando…</div>
+
+<script>
+var log = document.getElementById('log');
+var t   = function() { return new Date().toLocaleTimeString(); };
+
+function add(txt, cls) {
+  var span = document.createElement('span');
+  span.className = cls || '';
+  span.textContent = t() + ' ' + txt + '\n';
+  log.appendChild(span);
+  log.scrollTop = log.scrollHeight;
+}
+
+window.onerror = function(msg, src, line) {
+  add('ERROR JS (línea ' + line + '): ' + msg, 'err');
+};
+
+window.addEventListener('load', function() {
+  log.textContent = '';
+  if (window._AF_LOAD_ERROR) {
+    add('✗ autoscript.js NO se pudo cargar desde CDN', 'err');
+    add('  Comprueba tu conexión a internet', 'err');
+  } else if (typeof AutoScript === 'undefined') {
+    add('✗ AutoScript no definido (el script no exportó AutoScript)', 'err');
+  } else {
+    add('✓ autoscript.js cargado desde CDN', 'ok');
+    if (AutoScript.getVersion) {
+      add('  Versión: ' + AutoScript.getVersion(), 'inf');
+    }
+    add('  Funciones disponibles: ' +
+      ['cargarAppAfirma','sign','selectCertificate','getVersion']
+        .filter(function(f){ return typeof AutoScript[f] === 'function'; })
+        .join(', '), 'inf');
+  }
+});
+
+function testCargar() {
+  add('--- TEST 1: cargarAppAfirma() ---', 'inf');
+  if (typeof AutoScript === 'undefined') { add('✗ AutoScript no cargado', 'err'); return; }
+  try {
+    AutoScript.cargarAppAfirma();
+    add('✓ cargarAppAfirma() OK', 'ok');
+    add('  → El navegador debería preguntar si abrir AutoFirma', 'inf');
+    add('  → Si no pregunta: AutoFirma no está instalado', 'inf');
+  } catch(e) {
+    add('✗ Error: ' + e.message, 'err');
+  }
+}
+
+function testCertificado() {
+  add('--- TEST 2: selectCertificate() ---', 'inf');
+  if (typeof AutoScript === 'undefined') { add('✗ AutoScript no cargado', 'err'); return; }
+  try {
+    AutoScript.selectCertificate(
+      '',
+      function(cert) {
+        add('✓ Certificado seleccionado OK', 'ok');
+        add('  Datos (primeros 80 chars):', 'inf');
+        add('  ' + cert.substring(0,80) + '…', 'ok');
+      },
+      function(type, desc) {
+        add('✗ Error [' + type + ']: ' + desc, 'err');
+        if (type === 'SAF_02') add('  → Instala AutoFirma desde firmaelectronica.gob.es', 'inf');
+        if (type === 'SAF_03' || type === 'CANCELLED') add('  → Cancelado por el usuario', 'inf');
+      }
+    );
+    add('→ Esperando respuesta de AutoFirma…', 'inf');
+  } catch(e) {
+    add('✗ Excepción: ' + e.message, 'err');
+  }
+}
+
+function testFirmar() {
+  add('--- TEST 3: sign() ---', 'inf');
+  if (typeof AutoScript === 'undefined') { add('✗ AutoScript no cargado', 'err'); return; }
+  var datos = btoa('Prueba NDA Rocafort ' + new Date().toISOString());
+  try {
+    AutoScript.sign(
+      datos, 'SHA512withRSA', 'CAdES', '',
+      function(firmado, cert) {
+        add('✓ FIRMADO CORRECTAMENTE', 'ok');
+        add('  Resultado (primeros 50): ' + firmado.substring(0,50) + '…', 'ok');
+      },
+      function(type, desc) {
+        add('✗ Error firma [' + type + ']: ' + desc, 'err');
+      }
+    );
+    add('→ Esperando que AutoFirma firme…', 'inf');
+  } catch(e) {
+    add('✗ Excepción: ' + e.message, 'err');
+  }
+}
+</script>
+</body>
+</html>
